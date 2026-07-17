@@ -67,6 +67,9 @@ python -m pytest -q          # or:  python tests/test_scoring.py
 Re-sending overlapping days is safe: ingestion merges by date and prefers the
 newest non-null values.
 
+To reach the server from your phone (tunnel for testing, or an always-on host)
+and to secure `/ingest` with a token, see **[DEPLOY.md](DEPLOY.md)**.
+
 ## API
 
 | Method | Path            | Purpose                                            |

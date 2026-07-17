@@ -32,6 +32,10 @@ from .scoring import (
 BASELINE_WINDOW_DAYS = int(os.environ.get("SRI_BASELINE_WINDOW", "21"))
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "..", "static")
 
+# Optional shared secret. If SRI_API_KEY is set, /ingest requires a matching
+# `X-API-Key` header (or `?key=` query param). Leave unset for local-only use.
+API_KEY = os.environ.get("SRI_API_KEY", "").strip()
+
 app = FastAPI(title="Stress & Recovery Insights", version="0.1.0")
 
 
@@ -45,9 +49,18 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+def _authorized(request: Request) -> bool:
+    if not API_KEY:
+        return True  # no key configured -> open (fine for local/private use)
+    supplied = request.headers.get("x-api-key") or request.query_params.get("key", "")
+    return supplied == API_KEY
+
+
 @app.post("/ingest")
 async def ingest_endpoint(request: Request) -> JSONResponse:
     """Accept a Health Auto Export payload and upsert per-day metrics."""
+    if not _authorized(request):
+        return JSONResponse({"error": "Unauthorized."}, status_code=401)
     try:
         payload = await request.json()
     except Exception:
