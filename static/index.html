@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stress &amp; Recovery Insights</title>
+  <style>
+    :root {
+      --bg: #0f1115; --card: #171a21; --border: #262b36;
+      --text: #e7ebf2; --muted: #9aa4b2;
+      --green: #34d17a; --yellow: #f2c14e; --red: #f2685a; --accent: #5b8cff;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f6f7f9; --card: #ffffff; --border: #e3e6eb;
+        --text: #1b1f27; --muted: #5b6472;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 24px 20px 64px; }
+    header h1 { font-size: 22px; margin: 0 0 2px; }
+    header p { color: var(--muted); margin: 0 0 24px; }
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 620px) { .cards { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px;
+    }
+    .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em;
+      color: var(--muted); margin: 0 0 12px; font-weight: 600; }
+    .score { font-size: 48px; font-weight: 700; line-height: 1; }
+    .score small { font-size: 18px; color: var(--muted); font-weight: 500; }
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: 12px; font-weight: 600; margin-top: 10px; }
+    .state-green { background: rgba(52,209,122,.15); color: var(--green); }
+    .state-yellow { background: rgba(242,193,78,.15); color: var(--yellow); }
+    .state-red { background: rgba(242,104,90,.15); color: var(--red); }
+    .state-unknown, .level-unknown { background: rgba(154,164,178,.15); color: var(--muted); }
+    .level-low { background: rgba(52,209,122,.15); color: var(--green); }
+    .level-moderate { background: rgba(242,193,78,.15); color: var(--yellow); }
+    .level-high { background: rgba(242,104,90,.15); color: var(--red); }
+    .note { color: var(--muted); font-size: 12px; margin-top: 10px; }
+    .chart-card { margin-bottom: 20px; }
+    canvas { width: 100%; height: 260px; display: block; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--border); }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: var(--muted); font-weight: 600; }
+    .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+    .breakdown { margin-top: 14px; font-size: 12px; color: var(--muted); }
+    .breakdown span { display: inline-block; margin-right: 12px; }
+    code { background: rgba(127,127,127,.15); padding: 1px 5px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Stress &amp; Recovery Insights</h1>
+      <p>Whoop-style scores computed from your Apple Watch data — baseline-relative, all yours.</p>
+    </header>
+
+    <div id="content"><div class="empty">Loading…</div></div>
+  </div>
+
+  <script>
+    const el = (id) => document.getElementById(id);
+
+    function fmt(v, unit = "") {
+      return (v === null || v === undefined) ? "—" : (Math.round(v * 10) / 10) + unit;
+    }
+
+    async function load() {
+      let data;
+      try {
+        data = await (await fetch("/api/insights")).json();
+      } catch (e) {
+        el("content").innerHTML = '<div class="empty">Could not reach the API.</div>';
+        return;
+      }
+
+      if (!data.count) {
+        el("content").innerHTML = `<div class="card"><div class="empty">
+          No data yet. POST a Health Auto Export payload to <code>/ingest</code>,
+          or run <code>python scripts/seed_sample.py</code> to load a demo month.
+        </div></div>`;
+        return;
+      }
+
+      const L = data.latest;
+      const rec = L.recovery, stress = L.stress;
+      const breakdown = Object.entries(rec.contributions || {})
+        .map(([k, c]) => `<span>${k}: <b>${c.value}</b> (base ${c.baseline})</span>`).join("");
+
+      el("content").innerHTML = `
+        <div class="cards">
+          <div class="card">
+            <h2>Recovery — ${L.date}</h2>
+            <div class="score">${rec.score ?? "—"}<small>${rec.score != null ? "%" : ""}</small></div>
+            <span class="pill state-${rec.state}">${rec.state}</span>
+            ${rec.note ? `<div class="note">${rec.note}</div>` : ""}
+            <div class="breakdown">${breakdown}</div>
+          </div>
+          <div class="card">
+            <h2>Stress — ${L.date}</h2>
+            <div class="score">${stress.score ?? "—"}<small>${stress.score != null ? " / 3" : ""}</small></div>
+            <span class="pill level-${stress.level}">${stress.level}</span>
+            ${stress.note ? `<div class="note">${stress.note}</div>` : ""}
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <h2>Recovery &amp; Stress trend</h2>
+          <canvas id="trend"></canvas>
+        </div>
+        <div class="card chart-card">
+          <h2>Underlying signals (HRV &amp; resting HR)</h2>
+          <canvas id="signals"></canvas>
+        </div>
+
+        <div class="card">
+          <h2>Daily log</h2>
+          <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th>Date</th><th>Recovery</th><th>Stress</th><th>HRV</th>
+              <th>Rest HR</th><th>Sleep</th><th>Resp</th><th>Temp</th>
+            </tr></thead>
+            <tbody>${data.history.slice().reverse().map(d => `
+              <tr>
+                <td>${d.date}</td>
+                <td>${fmt(d.recovery.score)}</td>
+                <td>${fmt(d.stress.score)}</td>
+                <td>${fmt(d.raw.hrv)}</td>
+                <td>${fmt(d.raw.resting_hr)}</td>
+                <td>${fmt(d.raw.sleep_hours, "h")}</td>
+                <td>${fmt(d.raw.respiratory_rate)}</td>
+                <td>${fmt(d.raw.wrist_temperature)}</td>
+              </tr>`).join("")}
+            </tbody>
+          </table>
+          </div>
+        </div>`;
+
+      drawCharts(data.history);
+    }
+
+    function cssVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    // Minimal self-contained dual-axis line chart on a <canvas>. No dependencies.
+    function lineChart(canvas, opts) {
+      const dpr = window.devicePixelRatio || 1;
+      const cssW = canvas.clientWidth || 900, cssH = 260;
+      canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+      canvas.style.height = cssH + "px";
+      const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, cssW, cssH);
+
+      const pad = { l: 44, r: 44, t: 18, b: 26 };
+      const W = cssW - pad.l - pad.r, H = cssH - pad.t - pad.b;
+      const muted = cssVar("--muted"), grid = "rgba(127,127,127,.18)";
+      const n = opts.labels.length;
+      const xAt = (i) => pad.l + (n <= 1 ? W / 2 : (i / (n - 1)) * W);
+
+      function rangeOf(series) {
+        const vals = series.flatMap(s => s.data).filter(v => v != null);
+        let lo = Math.min(...vals), hi = Math.max(...vals);
+        if (!isFinite(lo)) { lo = 0; hi = 1; }
+        if (opts.fixed) { lo = opts.fixed[0]; hi = opts.fixed[1]; }
+        else { const p = (hi - lo) * 0.15 || 1; lo -= p; hi += p; }
+        return [lo, hi];
+      }
+      const left = opts.series.filter(s => s.axis !== "right");
+      const right = opts.series.filter(s => s.axis === "right");
+      const lr = rangeOf(left), rr = right.length ? rangeOf(right) : lr;
+      const yL = (v) => pad.t + H - ((v - lr[0]) / (lr[1] - lr[0] || 1)) * H;
+      const yR = (v) => pad.t + H - ((v - rr[0]) / (rr[1] - rr[0] || 1)) * H;
+
+      // gridlines + left axis labels
+      ctx.strokeStyle = grid; ctx.fillStyle = muted;
+      ctx.font = "11px -apple-system, sans-serif"; ctx.textBaseline = "middle";
+      for (let g = 0; g <= 4; g++) {
+        const y = pad.t + (g / 4) * H;
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + W, y); ctx.stroke();
+        const v = lr[1] - (g / 4) * (lr[1] - lr[0]);
+        ctx.textAlign = "right"; ctx.fillText(v.toFixed(0), pad.l - 6, y);
+        if (right.length) {
+          const rv = rr[1] - (g / 4) * (rr[1] - rr[0]);
+          ctx.textAlign = "left"; ctx.fillText(rv.toFixed(1), pad.l + W + 6, y);
+        }
+      }
+      // x labels (sparse)
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      const step = Math.ceil(n / 8);
+      for (let i = 0; i < n; i += step) {
+        ctx.fillText(opts.labels[i], xAt(i), pad.t + H + 6);
+      }
+
+      // series
+      for (const s of opts.series) {
+        const yFn = s.axis === "right" ? yR : yL;
+        ctx.strokeStyle = s.color; ctx.lineWidth = 2;
+        ctx.beginPath(); let started = false;
+        s.data.forEach((v, i) => {
+          if (v == null) { started = false; return; }
+          const x = xAt(i), y = yFn(v);
+          if (!started) { ctx.moveTo(x, y); started = true; } else { ctx.lineTo(x, y); }
+        });
+        ctx.stroke();
+      }
+
+      // legend
+      let lx = pad.l;
+      ctx.textBaseline = "middle"; ctx.textAlign = "left";
+      for (const s of opts.series) {
+        ctx.fillStyle = s.color; ctx.fillRect(lx, pad.t - 12, 10, 3);
+        ctx.fillStyle = muted; ctx.fillText(s.label, lx + 14, pad.t - 10);
+        lx += ctx.measureText(s.label).width + 40;
+      }
+    }
+
+    let _charts = [];
+    function drawCharts(history) {
+      const labels = history.map(d => d.date.slice(5));
+      const render = () => {
+        lineChart(el("trend"), {
+          labels,
+          series: [
+            { label: "Recovery %", color: "#34d17a", axis: "left",
+              data: history.map(d => d.recovery.score) },
+            { label: "Stress (0-3)", color: "#f2685a", axis: "right",
+              data: history.map(d => d.stress.score) },
+          ],
+          fixed: [0, 100],
+        });
+        lineChart(el("signals"), {
+          labels,
+          series: [
+            { label: "HRV (ms)", color: "#5b8cff", axis: "left",
+              data: history.map(d => d.raw.hrv) },
+            { label: "Resting HR (bpm)", color: "#f2c14e", axis: "right",
+              data: history.map(d => d.raw.resting_hr) },
+          ],
+        });
+      };
+      render();
+      _charts = [render];
+    }
+
+    // Redraw on resize / theme change so canvases stay crisp.
+    window.addEventListener("resize", () => _charts.forEach(fn => fn()));
+    if (window.matchMedia) {
+      window.matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener?.("change", () => _charts.forEach(fn => fn()));
+    }
+
+    load();
+  </script>
+</body>
+</html>
