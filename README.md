@@ -70,6 +70,13 @@ newest non-null values.
 To reach the server from your phone (tunnel for testing, or an always-on host)
 and to secure `/ingest` with a token, see **[DEPLOY.md](DEPLOY.md)**.
 
+### Prefer a free, always-on, serverless setup?
+
+There's a **Supabase** version under `supabase/` (Edge Functions + Postgres) with
+a static dashboard in `docs/` you can host free on GitHub Pages — no server to run
+and your history persists. Full walkthrough in **[SUPABASE.md](SUPABASE.md)**. The
+Python app above and the Supabase version share the same scoring logic.
+
 ## API
 
 | Method | Path            | Purpose                                            |
