@@ -13,6 +13,7 @@ from app.scoring import (
     DailyMetrics,
     build_baselines,
     compute_recovery,
+    compute_strain,
     compute_stress,
 )
 
@@ -66,6 +67,16 @@ def test_stress_rises_with_elevated_hr_and_low_hrv():
                            avg_daytime_hr=95), baselines)
     assert calm.score is not None and tense.score is not None
     assert tense.score > calm.score
+
+
+def test_strain_scales_with_active_energy():
+    rest = compute_strain(DailyMetrics("2026-07-01", active_energy=50))
+    hard = compute_strain(DailyMetrics("2026-07-02", active_energy=1200))
+    none = compute_strain(DailyMetrics("2026-07-03"))
+    assert none.score is None and none.level == "unknown"
+    assert rest.score < hard.score
+    assert 0 <= rest.score <= 21 and 0 <= hard.score <= 21
+    assert hard.level in ("moderate", "high", "all-out")
 
 
 def test_baseline_not_ready_flag():

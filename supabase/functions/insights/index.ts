@@ -90,6 +90,16 @@ function computeRecovery(day: Day, baselines: Record<string, Baseline>) {
   return { score, state, contributions, note: "" };
 }
 
+// Daily Strain / training load (0-21, Whoop-style). Derived from active energy
+// via a saturating curve, so easy days sit low and big days approach the ceiling.
+function computeStrain(day: Day) {
+  const ae = day.active_energy;
+  if (ae == null) return { score: null, level: "unknown" };
+  const score = Math.round(clamp(21 * (1 - Math.exp(-ae / 650)), 0, 21) * 10) / 10;
+  const level = score < 10 ? "light" : score < 14 ? "moderate" : score < 18 ? "high" : "all-out";
+  return { score, level };
+}
+
 function computeStress(day: Day, baselines: Record<string, Baseline>) {
   const comps: number[] = [];
   const hrvBase = baselines["hrv"];
@@ -135,14 +145,16 @@ Deno.serve(async (req) => {
     const baselines = buildBaselines(window);
     const recovery = computeRecovery(day, baselines);
     const stress = computeStress(day, baselines);
+    const strain = computeStrain(day);
     return {
       date: day.date,
       recovery,
       stress,
+      strain,
       raw: {
         hrv: day.hrv, resting_hr: day.resting_hr, sleep_hours: day.sleep_hours,
         respiratory_rate: day.respiratory_rate, wrist_temperature: day.wrist_temperature,
-        spo2: day.spo2,
+        spo2: day.spo2, active_energy: day.active_energy,
       },
     };
   });

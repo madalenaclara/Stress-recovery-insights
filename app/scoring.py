@@ -99,6 +99,13 @@ class StressResult:
     note: str = ""
 
 
+@dataclass
+class StrainResult:
+    date: str
+    score: Optional[float]                # 0-21
+    level: str                            # "light"/"moderate"/"high"/"all-out"/"unknown"
+
+
 def build_baselines(history: list[DailyMetrics]) -> dict[str, Baseline]:
     """Compute a rolling baseline per metric from prior days.
 
@@ -187,6 +194,21 @@ def compute_recovery(
         note = ""
 
     return RecoveryResult(day.date, score, state, contributions, baselines_ready, note)
+
+
+def compute_strain(day: DailyMetrics) -> StrainResult:
+    """Daily Strain / training load (0-21, Whoop-style) from active energy.
+
+    A saturating curve keeps easy days low and lets big days approach the ceiling,
+    mirroring how cardiovascular load accumulates with diminishing marginal effect.
+    """
+    ae = day.active_energy
+    if ae is None:
+        return StrainResult(day.date, None, "unknown")
+    score = round(_clamp(21.0 * (1.0 - math.exp(-ae / 650.0)), 0.0, 21.0), 1)
+    level = ("light" if score < 10 else "moderate" if score < 14
+             else "high" if score < 18 else "all-out")
+    return StrainResult(day.date, score, level)
 
 
 def compute_stress(day: DailyMetrics, baselines: dict[str, Baseline]) -> StressResult:

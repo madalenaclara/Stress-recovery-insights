@@ -26,6 +26,7 @@ from .scoring import (
     DailyMetrics,
     build_baselines,
     compute_recovery,
+    compute_strain,
     compute_stress,
 )
 
@@ -85,6 +86,7 @@ def _score_history() -> list[dict]:
         baselines = build_baselines(history)
         rec = compute_recovery(day, baselines)
         stress = compute_stress(day, baselines)
+        strain = compute_strain(day)
         out.append({
             "date": day.date,
             "recovery": {
@@ -98,6 +100,10 @@ def _score_history() -> list[dict]:
                 "level": stress.level,
                 "note": stress.note,
             },
+            "strain": {
+                "score": strain.score,
+                "level": strain.level,
+            },
             "raw": {
                 "hrv": day.hrv,
                 "resting_hr": day.resting_hr,
@@ -105,6 +111,7 @@ def _score_history() -> list[dict]:
                 "respiratory_rate": day.respiratory_rate,
                 "wrist_temperature": day.wrist_temperature,
                 "spo2": day.spo2,
+                "active_energy": day.active_energy,
             },
         })
     return out

@@ -13,49 +13,35 @@
       --series: #2a78d6; --series-soft: rgba(42,120,214,.14);
       --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
       --good-ink: #006300;
-      --r-lg: 18px; --r-md: 14px; --r-sm: 10px;
-      --sp: 16px;
+      --r-lg: 18px; --r-md: 14px; --r-sm: 10px; --sp: 16px;
     }
     @media (prefers-color-scheme: dark) {
       :root:where(:not([data-theme="light"])) {
         --plane: #0d0d0d; --surface: #1a1a19; --surface-2: #201f1e;
         --border: rgba(255,255,255,0.10); --hairline: #2c2c2a;
         --text: #ffffff; --text-2: #c3c2b7; --muted: #898781;
-        --series: #3987e5; --series-soft: rgba(57,135,229,.16);
-        --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
-        --good-ink: #0ca30c;
+        --series: #3987e5; --series-soft: rgba(57,135,229,.16); --good-ink: #0ca30c;
       }
     }
     :root[data-theme="dark"] {
       --plane: #0d0d0d; --surface: #1a1a19; --surface-2: #201f1e;
       --border: rgba(255,255,255,0.10); --hairline: #2c2c2a;
       --text: #ffffff; --text-2: #c3c2b7; --muted: #898781;
-      --series: #3987e5; --series-soft: rgba(57,135,229,.16);
-      --good-ink: #0ca30c;
+      --series: #3987e5; --series-soft: rgba(57,135,229,.16); --good-ink: #0ca30c;
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0; background: var(--plane); color: var(--text);
-      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
-      -webkit-font-smoothing: antialiased;
-    }
+    body { margin: 0; background: var(--plane); color: var(--text);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
     .wrap { max-width: 1000px; margin: 0 auto; padding: 20px 16px 72px; }
     header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
     header h1 { font-size: 21px; margin: 0 0 2px; letter-spacing: -.01em; }
     header p { color: var(--muted); margin: 0; font-size: 13px; max-width: 34ch; }
-    .btn {
-      background: var(--surface); border: 1px solid var(--border); color: var(--text-2);
-      border-radius: 999px; padding: 7px 13px; cursor: pointer; font-size: 13px; font-weight: 500;
-      white-space: nowrap;
-    }
+    .btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-2);
+      border-radius: 999px; padding: 7px 13px; cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; }
     .btn:hover { background: var(--surface-2); }
-    .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--r-lg); padding: 20px;
-    }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; }
     .grid { display: grid; gap: var(--sp); }
 
-    /* Hero */
     .hero { display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center; margin-bottom: var(--sp); }
     @media (max-width: 520px) { .hero { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
     .ring-wrap { position: relative; width: 168px; height: 168px; }
@@ -64,45 +50,58 @@
     .ring-score small { font-size: 17px; color: var(--muted); font-weight: 500; }
     .ring-sub { font-size: 12px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: .05em; }
     .hero-meta h2 { margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
-    .hero-date { font-size: 14px; color: var(--text-2); margin-bottom: 12px; }
     .status { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 15px; padding: 5px 12px; border-radius: 999px; }
     .status .dot { width: 9px; height: 9px; border-radius: 50%; }
     .insight { margin-top: 14px; font-size: 14px; color: var(--text-2); line-height: 1.5; }
 
-    /* Secondary + tiles */
+    /* Daily review */
+    .review { border-left: 4px solid var(--muted); margin-bottom: var(--sp); }
+    .review.good { border-left-color: var(--good); }
+    .review.warning { border-left-color: var(--warning); }
+    .review.critical { border-left-color: var(--critical); }
+    .review .r-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .review h3 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
+    .review .target { font-size: 12px; color: var(--text-2); background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 999px; padding: 4px 11px; white-space: nowrap; }
+    .review .target b { color: var(--text); }
+    .review .r-body { margin: 8px 0 0; color: var(--text-2); font-size: 14px; }
+    .tips { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 6px; }
+    .tips li { font-size: 13px; color: var(--text-2); padding-left: 20px; position: relative; }
+    .tips li::before { content: "→"; position: absolute; left: 0; color: var(--muted); }
+
     .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--sp); margin-bottom: var(--sp); }
     .tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 15px; }
     .tile .t-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
     .tile .t-val { font-size: 26px; font-weight: 700; margin-top: 6px; letter-spacing: -.02em; }
     .tile .t-val small { font-size: 14px; color: var(--muted); font-weight: 500; margin-left: 2px; }
     .tile .t-delta { font-size: 12px; margin-top: 3px; display: flex; align-items: center; gap: 4px; }
-    .t-delta.good { color: var(--good-ink); }
-    .t-delta.bad { color: var(--critical); }
-    .t-delta.neutral { color: var(--muted); }
+    .t-delta.good { color: var(--good-ink); } .t-delta.bad { color: var(--critical); } .t-delta.neutral { color: var(--muted); }
     .spark { margin-top: 10px; height: 34px; }
     .meter { height: 9px; border-radius: 999px; background: var(--hairline); overflow: hidden; margin-top: 10px; }
     .meter > span { display: block; height: 100%; border-radius: 999px; }
 
-    /* Charts */
+    /* Weekly */
+    .week { margin-bottom: var(--sp); }
+    .week h3 { margin: 0 0 14px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+    .week-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; }
+    .ws .ws-v { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+    .ws .ws-l { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
     .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; margin: 0 0 4px; }
     .chart-card { margin-bottom: var(--sp); position: relative; }
     .legend { display: flex; gap: 16px; margin: 8px 0 4px; font-size: 12px; color: var(--text-2); flex-wrap: wrap; }
     .legend i { display: inline-block; width: 14px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 6px; }
     .legend i.dash { border-top-style: dashed; }
     .chart-host { position: relative; width: 100%; }
-    .tooltip {
-      position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border);
+    .tooltip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border);
       border-radius: 8px; padding: 7px 9px; font-size: 12px; color: var(--text); box-shadow: 0 4px 14px rgba(0,0,0,.12);
-      transform: translate(-50%, -110%); white-space: nowrap; opacity: 0; transition: opacity .08s; z-index: 5;
-    }
+      transform: translate(-50%, -110%); white-space: nowrap; opacity: 0; transition: opacity .08s; z-index: 5; }
     .tooltip b { font-variant-numeric: tabular-nums; }
 
-    /* Filter chips */
     .chips { display: flex; gap: 8px; margin-bottom: var(--sp); flex-wrap: wrap; }
     .chip { background: var(--surface); border: 1px solid var(--border); color: var(--text-2); border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer; font-weight: 500; }
     .chip[aria-pressed="true"] { background: var(--series); border-color: var(--series); color: #fff; }
 
-    /* Table */
     details.card { padding: 0; }
     details > summary { list-style: none; cursor: pointer; padding: 16px 20px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; display: flex; justify-content: space-between; }
     details > summary::-webkit-details-marker { display: none; }
@@ -115,8 +114,6 @@
     .empty { text-align: center; color: var(--muted); padding: 44px 16px; }
     .foot { color: var(--muted); font-size: 12px; margin-top: 20px; text-align: center; }
     code { background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
-
-    /* Settings */
     .setup { max-width: 460px; margin: 32px auto; }
     .setup label { display: block; font-size: 13px; color: var(--text-2); margin: 14px 0 4px; font-weight: 500; }
     .setup input { width: 100%; padding: 11px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 14px; }
@@ -132,7 +129,7 @@
         <p>Whoop-style insights from your Apple Watch — baseline-relative, all yours.</p>
       </div>
       <div style="display:flex; gap:8px;">
-        <button class="btn" onclick="toggleTheme()" id="themeBtn" aria-label="Toggle theme">☾</button>
+        <button class="btn" onclick="toggleTheme()" aria-label="Toggle theme">☾</button>
         <button class="btn" onclick="openSettings()">⚙︎</button>
       </div>
     </header>
@@ -148,12 +145,10 @@
   const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
   const round = (v,d=1) => v==null ? null : Math.round(v*10**d)/10**d;
   const fmt = (v,u="") => v==null ? "—" : (round(v)+u);
-  const NS = "http://www.w3.org/2000/svg";
+  const avg = (a) => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
 
-  let RANGE = 30;      // days shown in charts/table
-  let DATA = null;     // last insights payload
+  let RANGE = 30, DATA = null;
 
-  // ---------- theme ----------
   function toggleTheme() {
     const cur = document.documentElement.getAttribute("data-theme");
     const next = cur === "dark" ? "light" : cur === "light" ? "" : "dark";
@@ -162,9 +157,8 @@
     localStorage.setItem("sri_theme", next);
     if (DATA) render(DATA);
   }
-  (function initTheme(){ const t = localStorage.getItem("sri_theme"); if (t) document.documentElement.setAttribute("data-theme", t); })();
+  (function(){ const t = localStorage.getItem("sri_theme"); if (t) document.documentElement.setAttribute("data-theme", t); })();
 
-  // ---------- settings ----------
   function openSettings() {
     const c = getCfg();
     $("content").innerHTML = `
@@ -185,7 +179,6 @@
     load();
   }
 
-  // ---------- data ----------
   async function load() {
     const c = getCfg();
     if (!c.url) return openSettings();
@@ -198,8 +191,7 @@
       data = await res.json();
     } catch (e) { return errBox("Could not reach the insights function. Check the URL."); }
     if (!data || !data.count) {
-      $("content").innerHTML = `<div class="card"><div class="empty">
-        Connected — but no data yet. Trigger a Health Auto Export sync, then refresh.</div></div>`;
+      $("content").innerHTML = `<div class="card"><div class="empty">Connected — but no data yet. Trigger a Health Auto Export sync, then refresh.</div></div>`;
       return;
     }
     DATA = data; render(data);
@@ -207,20 +199,13 @@
   const errBox = (m) => { $("content").innerHTML =
     `<div class="card"><div class="empty">${m}<br><br><button class="btn" onclick="openSettings()">Open settings</button></div></div>`; };
 
-  // ---------- derived helpers ----------
   function trailingAvg(hist, field, endExcl, win=7) {
-    const vals = [];
-    for (let i = Math.max(0, endExcl - win); i < endExcl; i++) {
-      const v = hist[i]?.raw?.[field];
-      if (v != null) vals.push(v);
-    }
-    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+    const v = [];
+    for (let i = Math.max(0, endExcl - win); i < endExcl; i++) { const x = hist[i]?.raw?.[field]; if (x != null) v.push(x); }
+    return avg(v);
   }
   function rollingAvg(series, win=7) {
-    return series.map((_, i) => {
-      const s = []; for (let j = Math.max(0, i-win+1); j <= i; j++) if (series[j] != null) s.push(series[j]);
-      return s.length ? s.reduce((a,b)=>a+b,0)/s.length : null;
-    });
+    return series.map((_, i) => { const s = []; for (let j = Math.max(0, i-win+1); j <= i; j++) if (series[j] != null) s.push(series[j]); return avg(s); });
   }
 
   const METRICS = [
@@ -238,10 +223,8 @@
     unknown:{ word:"—", color:"var(--muted)", icon:"·" },
   };
   const STRESS_STATUS = {
-    low:{ word:"Low", color:"var(--good)" },
-    moderate:{ word:"Moderate", color:"var(--warning)" },
-    high:{ word:"High", color:"var(--critical)" },
-    unknown:{ word:"—", color:"var(--muted)" },
+    low:{ word:"Low", color:"var(--good)" }, moderate:{ word:"Moderate", color:"var(--warning)" },
+    high:{ word:"High", color:"var(--critical)" }, unknown:{ word:"—", color:"var(--muted)" },
   };
 
   function deltaInfo(cur, base, good) {
@@ -254,223 +237,220 @@
     return { txt:`${arrow} ${Math.abs(pct).toFixed(0)}% vs 7-day`, cls };
   }
 
-  function makeInsight(latest) {
-    const r = latest.recovery, s = latest.stress;
-    if (r.note && (r.state === "unknown")) return r.note;
-    const c = r.contributions || {};
-    const hrv = c.hrv, rhr = c.resting_hr, sl = c.sleep_hours;
-    if (r.state === "green")
-      return `You're well recovered${hrv?` — HRV ${hrv.z>=0?"above":"around"} your baseline`:""}. A good day to train hard.`;
-    if (r.state === "yellow")
-      return `Moderate recovery. Your body is partly loaded — train, but keep intensity in check and prioritise sleep tonight.`;
-    if (r.state === "red") {
-      const drivers = [];
-      if (hrv && hrv.z < -0.5) drivers.push("HRV is down");
-      if (rhr && rhr.z > 0.5) drivers.push("resting HR is up");
-      if (sl && sl.value < 7) drivers.push("sleep was short");
-      return `Low recovery${drivers.length?` — ${drivers.join(", ")}`:""}. Favour rest, hydration and easy movement today.`;
-    }
-    return "";
+  // ---- Today's plan (daily review) ----
+  function makeReview(data) {
+    const L = data.latest, r = L.recovery, s = L.stress, hist = data.history;
+    if (r.state === "unknown")
+      return { tone:"", head:"Building your baseline", body:"Keep syncing daily — after about 5 days your recovery score and personalised plan kick in.", target:null, tips:[] };
+    const recentStrain = avg(hist.slice(-3).map(d => d.strain?.score).filter(v => v != null));
+    const lastSleep = L.raw.sleep_hours;
+    let head, body, target, tone;
+    if (r.state === "green") { head="Primed to perform"; target="14–18"; tone="good";
+      body="You're well recovered. A good day to push — intervals, a long effort, or a heavier session your body can absorb."; }
+    else if (r.state === "yellow") { head="Train with awareness"; target="10–14"; tone="warning";
+      body="You're partly loaded. Moderate training is fine — keep it controlled and skip maximal efforts today."; }
+    else { head="Prioritise recovery"; target="under 8"; tone="critical";
+      body="Recovery is low; your body is under strain. Favour rest or easy movement — a walk, mobility, or a light spin."; }
+    const tips = [];
+    if (lastSleep != null && lastSleep < 7) tips.push(`Sleep was short (${round(lastSleep)}h) — aim for 8h tonight.`);
+    if (recentStrain != null && recentStrain >= 14 && r.state !== "green") tips.push("You've carried high load for a few days — an easier day will pay off.");
+    if (s.level === "high") tips.push("Stress is elevated today — a few minutes of slow breathing can bring it down.");
+    if (r.state === "green" && (recentStrain == null || recentStrain < 8)) tips.push("You've been taking it easy — your body can handle more.");
+    return { tone, head, body, target, tips };
   }
 
-  // ---------- render ----------
-  function render(data) {
-    const hist = data.history;
-    const latest = data.latest;
-    const rec = latest.recovery, stress = latest.stress;
-    const st = STATUS[rec.state] || STATUS.unknown;
+  // ---- weekly summary ----
+  function weekly(hist) {
+    const last7 = hist.slice(-7);
+    const recs = last7.map(d => d.recovery.score).filter(v => v != null);
+    let best = null, worst = null;
+    last7.forEach(d => { if (d.recovery.score == null) return;
+      if (!best || d.recovery.score > best.recovery.score) best = d;
+      if (!worst || d.recovery.score < worst.recovery.score) worst = d; });
+    let streak = 0; for (let i = hist.length-1; i >= 0; i--) { if (hist[i].recovery.state === "green") streak++; else break; }
+    return {
+      avgRec: avg(recs), best, worst, streak,
+      avgSleep: avg(last7.map(d => d.raw.sleep_hours).filter(v => v != null)),
+      avgStrain: avg(last7.map(d => d.strain?.score).filter(v => v != null)),
+    };
+  }
 
-    // hero ring geometry
+  function render(data) {
+    const hist = data.history, latest = data.latest;
+    const rec = latest.recovery, stress = latest.stress, strain = latest.strain || {score:null,level:"unknown"};
+    const st = STATUS[rec.state] || STATUS.unknown;
     const pct = rec.score != null ? rec.score : 0;
     const R = 74, C = 2*Math.PI*R, off = C * (1 - pct/100);
+    const rev = makeReview(data), wk = weekly(hist);
 
-    // tiles
     const tiles = METRICS.map(m => {
       const cur = latest.raw[m.key];
-      const base = trailingAvg(hist, m.key, hist.length - 1, 7);
-      const d = deltaInfo(cur, base, m.good);
+      const d = deltaInfo(cur, trailingAvg(hist, m.key, hist.length-1, 7), m.good);
       const spark = hist.slice(-14).map(h => h.raw[m.key]);
-      return `<div class="tile">
-        <div class="t-label">${m.label}</div>
+      return `<div class="tile"><div class="t-label">${m.label}</div>
         <div class="t-val">${fmt(cur)}<small>${cur!=null?m.unit:""}</small></div>
         <div class="t-delta ${d.cls}">${d.txt}</div>
-        <div class="spark" data-spark='${JSON.stringify(spark)}'></div>
-      </div>`;
+        <div class="spark" data-spark='${JSON.stringify(spark)}'></div></div>`;
     }).join("");
 
-    // stress meter (0-3)
     const ss = STRESS_STATUS[stress.level] || STRESS_STATUS.unknown;
     const sPct = stress.score != null ? clamp(stress.score/3*100, 3, 100) : 0;
+    const strPct = strain.score != null ? clamp(strain.score/21*100, 3, 100) : 0;
 
     $("content").innerHTML = `
       <div class="card hero">
         <div class="ring-wrap">
           <svg width="168" height="168" viewBox="0 0 168 168" aria-hidden="true">
             <circle cx="84" cy="84" r="${R}" fill="none" stroke="var(--hairline)" stroke-width="13"/>
-            <circle cx="84" cy="84" r="${R}" fill="none" stroke="${st.color}" stroke-width="13"
-              stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}"
-              transform="rotate(-90 84 84)"/>
+            <circle cx="84" cy="84" r="${R}" fill="none" stroke="${st.color}" stroke-width="13" stroke-linecap="round"
+              stroke-dasharray="${C}" stroke-dashoffset="${off}" transform="rotate(-90 84 84)"/>
           </svg>
-          <div class="ring-center">
-            <div class="ring-score">${rec.score ?? "—"}<small>${rec.score!=null?"%":""}</small></div>
-            <div class="ring-sub">Recovery</div>
-          </div>
+          <div class="ring-center"><div class="ring-score">${rec.score ?? "—"}<small>${rec.score!=null?"%":""}</small></div><div class="ring-sub">Recovery</div></div>
         </div>
         <div class="hero-meta">
           <h2>Today · ${latest.date}</h2>
           <div class="status" style="background:color-mix(in srgb, ${st.color} 15%, transparent); color:${st.color};">
-            <span class="dot" style="background:${st.color}"></span>${st.icon} ${st.word} recovery
-          </div>
-          <div class="insight">${makeInsight(latest)}</div>
+            <span class="dot" style="background:${st.color}"></span>${st.icon} ${st.word} recovery</div>
+          <div class="insight">${makeInsightLine(latest)}</div>
         </div>
+      </div>
+
+      <div class="card review ${rev.tone}">
+        <div class="r-top">
+          <h3>Today's plan · ${rev.head}</h3>
+          ${rev.target ? `<span class="target">Suggested strain <b>${rev.target}</b></span>` : ""}
+        </div>
+        <p class="r-body">${rev.body}</p>
+        ${rev.tips.length ? `<ul class="tips">${rev.tips.map(t=>`<li>${t}</li>`).join("")}</ul>` : ""}
       </div>
 
       <div class="tiles">
-        <div class="tile">
-          <div class="t-label">Stress</div>
+        <div class="tile"><div class="t-label">Stress</div>
           <div class="t-val">${stress.score ?? "—"}<small>${stress.score!=null?" / 3":""}</small></div>
           <div class="t-delta neutral" style="color:${ss.color}; font-weight:600;">${ss.word}</div>
-          <div class="meter"><span style="width:${sPct}%; background:${ss.color};"></span></div>
-        </div>
+          <div class="meter"><span style="width:${sPct}%; background:${ss.color};"></span></div></div>
+        <div class="tile"><div class="t-label">Strain</div>
+          <div class="t-val">${strain.score ?? "—"}<small>${strain.score!=null?" / 21":""}</small></div>
+          <div class="t-delta neutral" style="font-weight:600; text-transform:capitalize;">${strain.level!=="unknown"?strain.level:"—"}</div>
+          <div class="meter"><span style="width:${strPct}%; background:var(--series);"></span></div></div>
         ${tiles}
       </div>
 
-      <div class="chips" id="chips">
-        ${[7,30,90,9999].map(n => `<button class="chip" aria-pressed="${RANGE===n}" onclick="setRange(${n})">${n===9999?"All":n+"d"}</button>`).join("")}
-      </div>
-
-      <div class="card chart-card">
-        <div class="section-title">Recovery</div>
-        <div class="legend"><span><i style="border-color:var(--series)"></i>Daily</span><span><i class="dash" style="border-color:var(--muted)"></i>7-day average</span></div>
-        <div class="chart-host" id="recHost"></div>
-      </div>
-
-      <div class="card chart-card">
-        <div class="section-title">Stress (0–3)</div>
-        <div class="legend"><span><i style="border-color:var(--series)"></i>Daily</span><span><i class="dash" style="border-color:var(--muted)"></i>7-day average</span></div>
-        <div class="chart-host" id="strHost"></div>
-      </div>
-
-      <div class="card chart-card">
-        <div class="section-title">HRV &amp; Resting heart rate</div>
-        <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px;" id="signalGrid">
-          <div><div class="legend"><span><i style="border-color:var(--series)"></i>HRV (ms)</span></div><div class="chart-host" id="hrvHost"></div></div>
-          <div><div class="legend"><span><i style="border-color:var(--series)"></i>Resting HR (bpm)</span></div><div class="chart-host" id="rhrHost"></div></div>
+      <div class="card week">
+        <h3>This week</h3>
+        <div class="week-stats">
+          <div class="ws"><div class="ws-v" style="color:${st.color}">${wk.avgRec!=null?Math.round(wk.avgRec)+"%":"—"}</div><div class="ws-l">Avg recovery</div></div>
+          <div class="ws"><div class="ws-v">${wk.streak}${wk.streak?" 🔥":""}</div><div class="ws-l">Green-day streak</div></div>
+          <div class="ws"><div class="ws-v">${wk.avgSleep!=null?round(wk.avgSleep)+"h":"—"}</div><div class="ws-l">Avg sleep</div></div>
+          <div class="ws"><div class="ws-v">${wk.avgStrain!=null?round(wk.avgStrain):"—"}</div><div class="ws-l">Avg strain</div></div>
+          <div class="ws"><div class="ws-v" style="color:var(--good)">${wk.best?Math.round(wk.best.recovery.score)+"%":"—"}</div><div class="ws-l">Best · ${wk.best?wk.best.date.slice(5):"—"}</div></div>
+          <div class="ws"><div class="ws-v" style="color:var(--critical)">${wk.worst?Math.round(wk.worst.recovery.score)+"%":"—"}</div><div class="ws-l">Toughest · ${wk.worst?wk.worst.date.slice(5):"—"}</div></div>
         </div>
       </div>
 
-      <details class="card">
-        <summary><span>Daily log</span><span>▾</span></summary>
+      <div class="chips">
+        ${[7,30,90,9999].map(n => `<button class="chip" aria-pressed="${RANGE===n}" onclick="setRange(${n})">${n===9999?"All":n+"d"}</button>`).join("")}
+      </div>
+
+      ${chartCard("Recovery","recHost")}
+      ${chartCard("Stress (0–3)","strHost")}
+      ${chartCard("Strain (0–21)","strainHost")}
+      <div class="card chart-card"><div class="section-title">HRV &amp; Resting heart rate</div>
+        <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px;">
+          <div><div class="legend"><span><i style="border-color:var(--series)"></i>HRV (ms)</span></div><div class="chart-host" id="hrvHost"></div></div>
+          <div><div class="legend"><span><i style="border-color:var(--series)"></i>Resting HR (bpm)</span></div><div class="chart-host" id="rhrHost"></div></div>
+        </div></div>
+
+      <details class="card"><summary><span>Daily log</span><span>▾</span></summary>
         <div class="table-scroll"><table>
-          <thead><tr><th>Date</th><th>Rec</th><th>Stress</th><th>HRV</th><th>Rest HR</th><th>Sleep</th><th>Resp</th><th>Temp</th><th>O₂</th></tr></thead>
+          <thead><tr><th>Date</th><th>Rec</th><th>Stress</th><th>Strain</th><th>HRV</th><th>Rest HR</th><th>Sleep</th><th>Resp</th><th>Temp</th><th>O₂</th></tr></thead>
           <tbody>${slice(hist).slice().reverse().map(d => `<tr>
-            <td>${d.date}</td><td>${fmt(d.recovery.score)}</td><td>${fmt(d.stress.score)}</td>
+            <td>${d.date}</td><td>${fmt(d.recovery.score)}</td><td>${fmt(d.stress.score)}</td><td>${fmt(d.strain?.score)}</td>
             <td>${fmt(d.raw.hrv)}</td><td>${fmt(d.raw.resting_hr)}</td><td>${fmt(d.raw.sleep_hours)}</td>
-            <td>${fmt(d.raw.respiratory_rate)}</td><td>${fmt(d.raw.wrist_temperature)}</td><td>${fmt(d.raw.spo2)}</td>
-          </tr>`).join("")}</tbody>
-        </table></div>
-      </details>`;
+            <td>${fmt(d.raw.respiratory_rate)}</td><td>${fmt(d.raw.wrist_temperature)}</td><td>${fmt(d.raw.spo2)}</td></tr>`).join("")}</tbody>
+        </table></div></details>`;
 
     $("foot").innerHTML = data.count < 6
       ? `Baseline still forming (${data.count} days). Scores sharpen after ~5 days of data.`
       : `${data.count} days tracked · baseline window ${data.baseline_window_days} days`;
 
-    // draw sparklines + charts
     document.querySelectorAll(".spark").forEach(el => sparkline(el, JSON.parse(el.dataset.spark)));
     drawCharts();
+  }
+
+  const chartCard = (title, id) => `<div class="card chart-card"><div class="section-title">${title}</div>
+    <div class="legend"><span><i style="border-color:var(--series)"></i>Daily</span><span><i class="dash" style="border-color:var(--muted)"></i>7-day average</span></div>
+    <div class="chart-host" id="${id}"></div></div>`;
+
+  function makeInsightLine(latest) {
+    const r = latest.recovery, c = r.contributions || {};
+    if (r.state === "unknown") return r.note || "";
+    if (r.state === "green") return `You're well recovered${c.hrv?` — HRV ${c.hrv.z>=0?"above":"around"} your baseline`:""}.`;
+    if (r.state === "yellow") return "Moderate recovery — a middle-ground day.";
+    const dr = []; if (c.hrv&&c.hrv.z<-.5) dr.push("HRV is down"); if (c.resting_hr&&c.resting_hr.z>.5) dr.push("resting HR is up");
+    return `Low recovery${dr.length?` — ${dr.join(", ")}`:""}.`;
   }
 
   function slice(hist) { return RANGE >= 9999 ? hist : hist.slice(-RANGE); }
   function setRange(n) { RANGE = n; if (DATA) render(DATA); }
 
   function drawCharts() {
-    const h = slice(DATA.history);
-    const labels = h.map(d => d.date.slice(5));
-    const rec = h.map(d => d.recovery.score);
-    const str = h.map(d => d.stress.score);
-    lineChart($("recHost"), { labels, series:[
-      { name:"Daily", data:rec, color:"var(--series)", fill:true },
-      { name:"7-day", data:rollingAvg(rec), color:"var(--muted)", dash:true },
-    ], yMin:0, yMax:100, unit:"%" });
-    lineChart($("strHost"), { labels, series:[
-      { name:"Daily", data:str, color:"var(--series)", fill:true },
-      { name:"7-day", data:rollingAvg(str), color:"var(--muted)", dash:true },
-    ], yMin:0, yMax:3, unit:"" });
-    lineChart($("hrvHost"), { labels, series:[{ name:"HRV", data:h.map(d=>d.raw.hrv), color:"var(--series)", fill:true }], unit:" ms" });
-    lineChart($("rhrHost"), { labels, series:[{ name:"Resting HR", data:h.map(d=>d.raw.resting_hr), color:"var(--series)", fill:true }], unit:" bpm" });
+    const h = slice(DATA.history), labels = h.map(d => d.date.slice(5));
+    const rec = h.map(d => d.recovery.score), str = h.map(d => d.stress.score), stn = h.map(d => d.strain?.score ?? null);
+    lineChart($("recHost"), { labels, series:[{name:"Daily",data:rec,color:"var(--series)",fill:true},{name:"7-day",data:rollingAvg(rec),color:"var(--muted)",dash:true}], yMin:0, yMax:100, unit:"%" });
+    lineChart($("strHost"), { labels, series:[{name:"Daily",data:str,color:"var(--series)",fill:true},{name:"7-day",data:rollingAvg(str),color:"var(--muted)",dash:true}], yMin:0, yMax:3, unit:"" });
+    lineChart($("strainHost"), { labels, series:[{name:"Daily",data:stn,color:"var(--series)",fill:true},{name:"7-day",data:rollingAvg(stn),color:"var(--muted)",dash:true}], yMin:0, yMax:21, unit:"" });
+    lineChart($("hrvHost"), { labels, series:[{name:"HRV",data:h.map(d=>d.raw.hrv),color:"var(--series)",fill:true}], unit:" ms" });
+    lineChart($("rhrHost"), { labels, series:[{name:"Resting HR",data:h.map(d=>d.raw.resting_hr),color:"var(--series)",fill:true}], unit:" bpm" });
   }
 
-  // ---------- tiny sparkline (single series, no axes) ----------
   function sparkline(host, data) {
     const W = host.clientWidth || 130, H = 34, pad = 3;
     const vals = data.filter(v => v != null);
     if (vals.length < 2) { host.innerHTML = `<svg width="${W}" height="${H}"></svg>`; return; }
-    const lo = Math.min(...vals), hi = Math.max(...vals), span = (hi-lo)||1;
-    const n = data.length;
-    const x = i => pad + (n<=1?0:(i/(n-1))*(W-2*pad));
-    const y = v => pad + (1-(v-lo)/span)*(H-2*pad);
-    let dPath="", started=false, last=null;
-    data.forEach((v,i)=>{ if(v==null){started=false;return;} const px=x(i),py=y(v);
-      dPath += (started?"L":"M")+px.toFixed(1)+" "+py.toFixed(1)+" "; started=true; last=[px,py]; });
-    host.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-      <path d="${dPath}" fill="none" stroke="var(--series)" stroke-width="1.6" stroke-linejoin="round"/>
-      ${last?`<circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.4" fill="var(--series)"/>`:""}
-    </svg>`;
+    const lo = Math.min(...vals), hi = Math.max(...vals), span = (hi-lo)||1, n = data.length;
+    const x = i => pad + (n<=1?0:(i/(n-1))*(W-2*pad)), y = v => pad + (1-(v-lo)/span)*(H-2*pad);
+    let d="", started=false, last=null;
+    data.forEach((v,i)=>{ if(v==null){started=false;return;} const px=x(i),py=y(v); d+=(started?"L":"M")+px.toFixed(1)+" "+py.toFixed(1)+" "; started=true; last=[px,py]; });
+    host.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><path d="${d}" fill="none" stroke="var(--series)" stroke-width="1.6" stroke-linejoin="round"/>${last?`<circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.4" fill="var(--series)"/>`:""}</svg>`;
   }
 
-  // ---------- line chart (single y-axis) with hover ----------
   function lineChart(host, opts) {
-    const W = host.clientWidth || 300, H = 210;
-    const pad = { l:32, r:12, t:12, b:22 };
+    const W = host.clientWidth || 300, H = 210, pad = { l:32, r:12, t:12, b:22 };
     const plotW = W-pad.l-pad.r, plotH = H-pad.t-pad.b;
     const all = opts.series.flatMap(s => s.data).filter(v => v!=null);
-    let lo = opts.yMin!=null ? opts.yMin : Math.min(...all);
-    let hi = opts.yMax!=null ? opts.yMax : Math.max(...all);
+    let lo = opts.yMin!=null ? opts.yMin : Math.min(...all), hi = opts.yMax!=null ? opts.yMax : Math.max(...all);
     if (opts.yMin==null) { const p=(hi-lo)*0.12||1; lo-=p; hi+=p; }
     const n = opts.labels.length;
-    const X = i => pad.l + (n<=1?plotW/2:(i/(n-1))*plotW);
-    const Y = v => pad.t + (1-(v-lo)/((hi-lo)||1))*plotH;
-
+    const X = i => pad.l + (n<=1?plotW/2:(i/(n-1))*plotW), Y = v => pad.t + (1-(v-lo)/((hi-lo)||1))*plotH;
     let grid="", ylab="";
-    for (let g=0; g<=3; g++){ const yy=pad.t+(g/3)*plotH; const val=hi-(g/3)*(hi-lo);
+    for (let g=0; g<=3; g++){ const yy=pad.t+(g/3)*plotH, val=hi-(g/3)*(hi-lo);
       grid += `<line x1="${pad.l}" y1="${yy}" x2="${pad.l+plotW}" y2="${yy}" stroke="var(--hairline)" stroke-width="1"/>`;
       ylab += `<text x="${pad.l-6}" y="${yy+3}" text-anchor="end" font-size="10" fill="var(--muted)">${round(val,0)}</text>`; }
     let xlab=""; const step=Math.max(1,Math.ceil(n/6));
     for (let i=0;i<n;i+=step) xlab += `<text x="${X(i)}" y="${H-6}" text-anchor="middle" font-size="10" fill="var(--muted)">${opts.labels[i]}</text>`;
-
     let paths="";
     opts.series.forEach(s => {
       let d="", started=false, area="";
-      s.data.forEach((v,i)=>{ if(v==null){started=false;return;} const px=X(i),py=Y(v);
-        d += (started?"L":"M")+px.toFixed(1)+" "+py.toFixed(1)+" "; started=true; });
-      if (s.fill && d) {
-        // build area under the (contiguous) line
-        const pts = s.data.map((v,i)=>v==null?null:[X(i),Y(v)]).filter(Boolean);
-        if (pts.length) area = `<path d="M${pts[0][0]} ${pad.t+plotH} L`+pts.map(p=>p[0]+" "+p[1]).join(" L")+` L${pts[pts.length-1][0]} ${pad.t+plotH} Z" fill="var(--series-soft)"/>`;
-      }
+      s.data.forEach((v,i)=>{ if(v==null){started=false;return;} const px=X(i),py=Y(v); d+=(started?"L":"M")+px.toFixed(1)+" "+py.toFixed(1)+" "; started=true; });
+      if (s.fill && d) { const pts = s.data.map((v,i)=>v==null?null:[X(i),Y(v)]).filter(Boolean);
+        if (pts.length) area = `<path d="M${pts[0][0]} ${pad.t+plotH} L`+pts.map(p=>p[0]+" "+p[1]).join(" L")+` L${pts[pts.length-1][0]} ${pad.t+plotH} Z" fill="var(--series-soft)"/>`; }
       paths += area + `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" ${s.dash?'stroke-dasharray="4 4"':''}/>`;
     });
-
-    host.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="touch-action:none;">
-      ${grid}${ylab}${xlab}${paths}
+    host.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="touch-action:none;">${grid}${ylab}${xlab}${paths}
       <line id="cross" x1="0" y1="${pad.t}" x2="0" y2="${pad.t+plotH}" stroke="var(--muted)" stroke-width="1" opacity="0"/>
-      <rect x="${pad.l}" y="${pad.t}" width="${plotW}" height="${plotH}" fill="transparent"/>
-    </svg><div class="tooltip"></div>`;
+      <rect x="${pad.l}" y="${pad.t}" width="${plotW}" height="${plotH}" fill="transparent"/></svg><div class="tooltip"></div>`;
     const svg = host.querySelector("svg"), cross = host.querySelector("#cross"), tip = host.querySelector(".tooltip");
-    function move(e){
-      const rect = svg.getBoundingClientRect();
+    function move(e){ const rect = svg.getBoundingClientRect();
       const cx = (e.touches?e.touches[0].clientX:e.clientX) - rect.left;
       const i = clamp(Math.round((cx-pad.l)/(plotW||1)*(n-1)), 0, n-1);
       if (opts.labels[i]==null) return;
       cross.setAttribute("x1", X(i)); cross.setAttribute("x2", X(i)); cross.setAttribute("opacity","1");
       const rows = opts.series.map(s => s.data[i]==null?null:`${s.name}: <b>${round(s.data[i])}${opts.unit||""}</b>`).filter(Boolean).join("<br>");
       tip.innerHTML = `<div style="color:var(--muted);margin-bottom:2px">${opts.labels[i]}</div>${rows}`;
-      tip.style.left = clamp(X(i),40,W-40)+"px"; tip.style.top = pad.t+8+"px"; tip.style.opacity = "1";
-    }
+      tip.style.left = clamp(X(i),40,W-40)+"px"; tip.style.top = pad.t+8+"px"; tip.style.opacity = "1"; }
     function leave(){ cross.setAttribute("opacity","0"); tip.style.opacity="0"; }
-    svg.addEventListener("pointermove", move);
-    svg.addEventListener("pointerleave", leave);
-    svg.addEventListener("touchmove", move, {passive:true});
+    svg.addEventListener("pointermove", move); svg.addEventListener("pointerleave", leave); svg.addEventListener("touchmove", move, {passive:true});
   }
 
   let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => DATA && render(DATA), 200); });
