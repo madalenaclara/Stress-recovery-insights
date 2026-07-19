@@ -87,6 +87,32 @@
     .ws .ws-v { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
     .ws .ws-l { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
+    /* gamification */
+    .block { margin-bottom: var(--sp); }
+    .block h3 { margin: 0 0 14px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+    .goals { display: grid; gap: 14px; }
+    .goal .g-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+    .goal .g-top b { font-variant-numeric: tabular-nums; }
+    .goal .g-done { color: var(--good-ink); font-weight: 600; }
+    .badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; }
+    .badge { text-align: center; padding: 12px 8px; border-radius: var(--r-md); border: 1px solid var(--border); background: var(--surface-2); }
+    .badge.locked { opacity: .4; filter: grayscale(1); }
+    .badge .b-ico { font-size: 26px; line-height: 1; }
+    .badge .b-name { font-size: 11px; font-weight: 600; margin-top: 6px; }
+    .badge .b-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .records { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 14px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--hairline); }
+    .rec-v { font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+    .rec-l { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    /* workouts */
+    .wk-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--hairline); }
+    .wk-row:last-child { border-bottom: none; }
+    .wk-ico { font-size: 22px; width: 30px; text-align: center; }
+    .wk-main { flex: 1; min-width: 0; }
+    .wk-type { font-weight: 600; font-size: 14px; }
+    .wk-date { font-size: 12px; color: var(--muted); }
+    .wk-stats { text-align: right; font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .wk-stats b { color: var(--text); font-size: 14px; }
+
     .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; margin: 0 0 4px; }
     .chart-card { margin-bottom: var(--sp); position: relative; }
     .legend { display: flex; gap: 16px; margin: 8px 0 4px; font-size: 12px; color: var(--text-2); flex-wrap: wrap; }
@@ -275,6 +301,51 @@
     };
   }
 
+  // ---- gamification ----
+  function maxGreenStreak(hist) {
+    let best = 0, cur = 0;
+    for (const d of hist) { if (d.recovery.state === "green") { cur++; best = Math.max(best, cur); } else cur = 0; }
+    return best;
+  }
+  function weeklyGoals(hist) {
+    const last7 = hist.slice(-7);
+    const green = last7.filter(d => d.recovery.state === "green").length;
+    const sleptWell = last7.filter(d => d.raw.sleep_hours != null && d.raw.sleep_hours >= 7).length;
+    const recs = last7.map(d => d.recovery.score).filter(v => v != null);
+    const avgRec = avg(recs);
+    return [
+      { label:"Green recovery days", cur:green, goal:4, unit:"" },
+      { label:"Nights of 7h+ sleep", cur:sleptWell, goal:5, unit:"" },
+      { label:"Avg recovery ≥ 60%", cur:avgRec!=null?Math.round(avgRec):0, goal:60, unit:"%" },
+    ];
+  }
+  const ACHIEVEMENTS = [
+    { icon:"📲", name:"First Sync", desc:"Logged a day", test:h=>h.length>=1 },
+    { icon:"📅", name:"One Week", desc:"7 days tracked", test:h=>h.length>=7 },
+    { icon:"🗓️", name:"Consistent", desc:"30 days tracked", test:h=>h.length>=30 },
+    { icon:"😴", name:"Well Rested", desc:"An 8h+ night", test:h=>h.some(d=>d.raw.sleep_hours>=8) },
+    { icon:"💚", name:"Peak Recovery", desc:"Hit 85%+", test:h=>h.some(d=>d.recovery.score>=85) },
+    { icon:"🔥", name:"Green ×3", desc:"3 green in a row", test:h=>maxGreenStreak(h)>=3 },
+    { icon:"🌿", name:"Green ×7", desc:"7 green in a row", test:h=>maxGreenStreak(h)>=7 },
+    { icon:"⚡", name:"All Out", desc:"18+ strain day", test:h=>h.some(d=>d.strain?.score>=18) },
+    { icon:"🧘", name:"Smart Rest", desc:"Rested when low", test:h=>h.some(d=>d.recovery.state==="red"&&d.strain?.score!=null&&d.strain.score<8) },
+    { icon:"⚖️", name:"In Balance", desc:"Trained when fresh", test:h=>h.some(d=>d.recovery.state==="green"&&d.strain?.score>=12) },
+  ];
+  function records(hist) {
+    const max = (f) => { const v = hist.map(f).filter(x=>x!=null); return v.length?Math.max(...v):null; };
+    return [
+      { l:"Best recovery", v: max(d=>d.recovery.score), u:"%" },
+      { l:"Highest HRV", v: max(d=>d.raw.hrv), u:" ms" },
+      { l:"Longest sleep", v: max(d=>d.raw.sleep_hours), u:"h" },
+      { l:"Best green streak", v: maxGreenStreak(hist)||null, u:" days" },
+      { l:"Hardest day", v: max(d=>d.strain?.score), u:" strain" },
+    ];
+  }
+  const WK_ICON = (t) => { t=(t||"").toLowerCase();
+    if (/run/.test(t)) return "🏃"; if (/walk|hik/.test(t)) return "🚶"; if (/cycl|bike|spin/.test(t)) return "🚴";
+    if (/swim/.test(t)) return "🏊"; if (/strength|weight|lift|function/.test(t)) return "🏋️"; if (/yoga|pilates|flex/.test(t)) return "🧘";
+    if (/hiit|interval/.test(t)) return "🔥"; if (/row/.test(t)) return "🚣"; if (/danc/.test(t)) return "💃"; return "🏅"; };
+
   function render(data) {
     const hist = data.history, latest = data.latest;
     const rec = latest.recovery, stress = latest.stress, strain = latest.strain || {score:null,level:"unknown"};
@@ -282,6 +353,7 @@
     const pct = rec.score != null ? rec.score : 0;
     const R = 74, C = 2*Math.PI*R, off = C * (1 - pct/100);
     const rev = makeReview(data), wk = weekly(hist);
+    const goals = weeklyGoals(hist), recList = records(hist), workouts = data.workouts || [];
 
     const tiles = METRICS.map(m => {
       const cur = latest.raw[m.key];
@@ -347,6 +419,30 @@
           <div class="ws"><div class="ws-v" style="color:var(--critical)">${wk.worst?Math.round(wk.worst.recovery.score)+"%":"—"}</div><div class="ws-l">Toughest · ${wk.worst?wk.worst.date.slice(5):"—"}</div></div>
         </div>
       </div>
+
+      <div class="card block">
+        <h3>Goals this week</h3>
+        <div class="goals">${goals.map(g => { const pct = clamp(g.cur/g.goal*100,0,100), done = g.cur>=g.goal;
+          return `<div class="goal"><div class="g-top"><span>${g.label}</span>
+            <span class="${done?'g-done':''}"><b>${g.cur}${g.unit}</b> / ${g.goal}${g.unit} ${done?'✓':''}</span></div>
+            <div class="meter"><span style="width:${pct}%; background:${done?'var(--good)':'var(--series)'};"></span></div></div>`; }).join("")}</div>
+      </div>
+
+      <div class="card block">
+        <h3>Achievements · ${ACHIEVEMENTS.filter(a=>a.test(hist)).length}/${ACHIEVEMENTS.length}</h3>
+        <div class="badges">${ACHIEVEMENTS.map(a => { const earned = a.test(hist);
+          return `<div class="badge ${earned?'':'locked'}"><div class="b-ico">${a.icon}</div><div class="b-name">${a.name}</div><div class="b-desc">${a.desc}</div></div>`; }).join("")}</div>
+        <div class="records">${recList.map(r => `<div><div class="rec-v">${r.v!=null?round(r.v)+r.u:"—"}</div><div class="rec-l">${r.l}</div></div>`).join("")}</div>
+      </div>
+
+      ${workouts.length ? `<div class="card block">
+        <h3>Recent workouts</h3>
+        ${workouts.slice(0,8).map(w => `<div class="wk-row">
+          <div class="wk-ico">${WK_ICON(w.type)}</div>
+          <div class="wk-main"><div class="wk-type">${w.type||"Workout"}</div><div class="wk-date">${w.date}${w.duration_min?` · ${Math.round(w.duration_min)} min`:""}</div></div>
+          <div class="wk-stats">${w.active_energy!=null?`<b>${Math.round(w.active_energy)}</b> kcal`:""}${w.avg_hr!=null?`<br>${Math.round(w.avg_hr)} bpm avg`:""}${w.distance!=null?`<br>${round(w.distance)} km`:""}</div>
+        </div>`).join("")}
+      </div>` : ""}
 
       <div class="chips">
         ${[7,30,90,9999].map(n => `<button class="chip" aria-pressed="${RANGE===n}" onclick="setRange(${n})">${n===9999?"All":n+"d"}</button>`).join("")}

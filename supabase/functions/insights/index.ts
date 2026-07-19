@@ -159,10 +159,22 @@ Deno.serve(async (req) => {
     };
   });
 
+  // Recent workouts (best-effort; the table may not exist on older setups).
+  let workouts: unknown[] = [];
+  try {
+    const wk = await supabase
+      .from("workouts")
+      .select("*")
+      .order("date", { ascending: false })
+      .limit(40);
+    if (!wk.error && wk.data) workouts = wk.data;
+  } catch (_e) { /* workouts table not set up yet */ }
+
   return json({
     count: history.length,
     baseline_window_days: BASELINE_WINDOW_DAYS,
     latest: history.length ? history[history.length - 1] : null,
     history,
+    workouts,
   });
 });

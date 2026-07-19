@@ -120,6 +120,56 @@ function parsePayload(payload: any): Record<string, unknown>[] {
   return rows;
 }
 
+// ---- workouts ----------------------------------------------------------
+// Reads a number whether Health Auto Export sends a scalar or a {qty, units}.
+function numOf(v: any): number | null {
+  if (v == null) return null;
+  if (typeof v === "number") return v;
+  if (typeof v === "object" && v.qty != null && !isNaN(Number(v.qty))) return Number(v.qty);
+  return isNaN(Number(v)) ? null : Number(v);
+}
+
+function parseTs(s: string): number | null {
+  if (!s) return null;
+  const m = String(s).trim().match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})\s*([+-]\d{2}):?(\d{2})?/);
+  const iso = m ? `${m[1]}T${m[2]}${m[3]}:${m[4] ?? "00"}` : s;
+  const t = Date.parse(iso);
+  return isNaN(t) ? null : t;
+}
+
+function parseWorkouts(payload: any): Record<string, unknown>[] {
+  const data = payload?.data ?? payload ?? {};
+  const list: any[] = data.workouts ?? [];
+  const rows: Record<string, unknown>[] = [];
+  for (const w of list) {
+    const start = w.start ?? w.startDate ?? "";
+    const id = String(start || w.id || "").trim();
+    const date = parseDate(start);
+    if (!id || !date) continue;
+    const end = w.end ?? w.endDate ?? "";
+    const ts0 = parseTs(start), ts1 = parseTs(end);
+    let durMin: number | null = ts0 != null && ts1 != null ? (ts1 - ts0) / 60000 : null;
+    if (durMin == null) {
+      const d = numOf(w.duration);
+      if (d != null) durMin = d > 600 ? d / 60 : d; // seconds vs minutes heuristic
+    }
+    rows.push({
+      id,
+      date,
+      type: w.name ?? w.type ?? w.workoutActivityType ?? "Workout",
+      start_at: start || null,
+      end_at: end || null,
+      duration_min: durMin != null ? Math.round(durMin * 10) / 10 : null,
+      active_energy: numOf(w.activeEnergyBurned ?? w.activeEnergy ?? w.totalEnergy),
+      avg_hr: numOf(w.avgHeartRate ?? w.averageHeartRate ?? w.heartRateAverage),
+      max_hr: numOf(w.maxHeartRate ?? w.heartRateMax),
+      distance: numOf(w.distance ?? w.totalDistance),
+      source: w.source ?? "Apple Watch",
+    });
+  }
+  return rows;
+}
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -137,10 +187,20 @@ Deno.serve(async (req) => {
   }
 
   const rows = parsePayload(payload);
-  if (!rows.length) return json({ ingested_days: 0, dates: [] });
+  const workouts = parseWorkouts(payload);
 
-  const { error } = await supabase.rpc("upsert_daily", { rows });
-  if (error) return json({ error: error.message }, 500);
+  if (rows.length) {
+    const { error } = await supabase.rpc("upsert_daily", { rows });
+    if (error) return json({ error: error.message }, 500);
+  }
+  if (workouts.length) {
+    const { error } = await supabase.rpc("upsert_workouts", { rows: workouts });
+    if (error) return json({ error: `workouts: ${error.message}` }, 500);
+  }
 
-  return json({ ingested_days: rows.length, dates: rows.map((r) => r.date) });
+  return json({
+    ingested_days: rows.length,
+    dates: rows.map((r) => r.date),
+    ingested_workouts: workouts.length,
+  });
 });
