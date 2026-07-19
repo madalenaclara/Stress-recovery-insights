@@ -2,14 +2,11 @@
 //
 // Reads all stored days and returns Whoop-style Recovery + Stress scores,
 // computed baseline-relative (each metric vs. your own rolling 21-day average).
-// Read-only. Protect with the same INGEST_API_KEY (sent as X-API-Key) so your
-// health scores aren't world-readable.
-//
-// Deploy:  supabase functions deploy insights --no-verify-jwt
+// Read-only. Auth is handled by Supabase's gateway (the project's anon key must
+// be sent as an `apikey` header).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const API_KEY = Deno.env.get("INGEST_API_KEY") ?? "";
 const BASELINE_WINDOW_DAYS = Number(Deno.env.get("SRI_BASELINE_WINDOW") ?? "21");
 
 const supabase = createClient(
@@ -125,14 +122,6 @@ const json = (body: unknown, status = 200) =>
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return json({}, 204);
-
-  if (API_KEY) {
-    const supplied =
-      req.headers.get("x-api-key") ??
-      new URL(req.url).searchParams.get("key") ??
-      "";
-    if (supplied !== API_KEY) return json({ error: "Unauthorized" }, 401);
-  }
 
   const { data, error } = await supabase
     .from("daily_metrics")

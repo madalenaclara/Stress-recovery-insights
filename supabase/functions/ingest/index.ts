@@ -2,15 +2,10 @@
 //
 // Receives a Health Auto Export JSON payload, normalises it into per-day rows,
 // and merge-upserts them into the daily_metrics table via the upsert_daily()
-// SQL function. Protect it with a secret: set INGEST_API_KEY and send it as an
-// `X-API-Key` header (or `?key=` query param).
-//
-// Deploy with JWT verification OFF so Health Auto Export only needs the one
-// header:  supabase functions deploy ingest --no-verify-jwt
+// SQL function. Auth is handled by Supabase's gateway (the project's anon key
+// must be sent as an `apikey` header), so no extra app-level key is needed.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const API_KEY = Deno.env.get("INGEST_API_KEY") ?? "";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -133,14 +128,6 @@ const json = (body: unknown, status = 200) =>
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
-
-  if (API_KEY) {
-    const supplied =
-      req.headers.get("x-api-key") ??
-      new URL(req.url).searchParams.get("key") ??
-      "";
-    if (supplied !== API_KEY) return json({ error: "Unauthorized" }, 401);
-  }
 
   let payload: unknown;
   try {

@@ -82,9 +82,9 @@
           <label>Functions base URL</label>
           <input id="cfgUrl" placeholder="https://YOUR-REF.supabase.co/functions/v1" value="${c.url || ""}" />
           <div class="hint">From your Supabase project → Edge Functions. Ends in <code>/functions/v1</code>.</div>
-          <label>API key (X-API-Key)</label>
-          <input id="cfgKey" type="password" placeholder="your INGEST_API_KEY secret" value="${c.key || ""}" />
-          <div class="hint">The same secret you set for the functions. Stored only in this browser.</div>
+          <label>Supabase anon key</label>
+          <input id="cfgKey" type="password" placeholder="your project's anon / public key (eyJ...)" value="${c.key || ""}" />
+          <div class="hint">Supabase → Project Settings → API → anon/public key. Stored only in this browser.</div>
           <button onclick="saveSettings()">Save &amp; load</button>
         </div>`;
     }
@@ -102,7 +102,9 @@
       el("content").innerHTML = '<div class="empty">Loading…</div>';
       let data;
       try {
-        const res = await fetch(`${c.url}/insights`, { headers: { "X-API-Key": c.key || "" } });
+        const res = await fetch(`${c.url}/insights`, {
+          headers: { apikey: c.key || "", Authorization: `Bearer ${c.key || ""}` },
+        });
         if (res.status === 401) { el("content").innerHTML = errBox("Unauthorized — check your API key."); return; }
         data = await res.json();
       } catch (e) {
