@@ -6,52 +6,121 @@
   <title>Stress &amp; Recovery Insights</title>
   <style>
     :root {
-      --bg: #0f1115; --card: #171a21; --border: #262b36;
-      --text: #e7ebf2; --muted: #9aa4b2;
-      --green: #34d17a; --yellow: #f2c14e; --red: #f2685a; --accent: #5b8cff;
+      color-scheme: light dark;
+      --plane: #f9f9f7; --surface: #ffffff; --surface-2: #fbfbfa;
+      --border: rgba(11,11,11,0.10); --hairline: #e1e0d9;
+      --text: #0b0b0b; --text-2: #52514e; --muted: #898781;
+      --series: #2a78d6; --series-soft: rgba(42,120,214,.14);
+      --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
+      --good-ink: #006300;
+      --r-lg: 18px; --r-md: 14px; --r-sm: 10px;
+      --sp: 16px;
     }
-    @media (prefers-color-scheme: light) {
-      :root { --bg: #f6f7f9; --card: #fff; --border: #e3e6eb; --text: #1b1f27; --muted: #5b6472; }
+    @media (prefers-color-scheme: dark) {
+      :root:where(:not([data-theme="light"])) {
+        --plane: #0d0d0d; --surface: #1a1a19; --surface-2: #201f1e;
+        --border: rgba(255,255,255,0.10); --hairline: #2c2c2a;
+        --text: #ffffff; --text-2: #c3c2b7; --muted: #898781;
+        --series: #3987e5; --series-soft: rgba(57,135,229,.16);
+        --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
+        --good-ink: #0ca30c;
+      }
+    }
+    :root[data-theme="dark"] {
+      --plane: #0d0d0d; --surface: #1a1a19; --surface-2: #201f1e;
+      --border: rgba(255,255,255,0.10); --hairline: #2c2c2a;
+      --text: #ffffff; --text-2: #c3c2b7; --muted: #898781;
+      --series: #3987e5; --series-soft: rgba(57,135,229,.16);
+      --good-ink: #0ca30c;
     }
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--text);
-      font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    .wrap { max-width: 980px; margin: 0 auto; padding: 24px 20px 64px; }
-    header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-    header h1 { font-size: 22px; margin: 0 0 2px; }
-    header p { color: var(--muted); margin: 0 0 24px; }
-    .gear { background: none; border: 1px solid var(--border); color: var(--muted);
-      border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 13px; }
-    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-    @media (max-width: 620px) { .cards { grid-template-columns: 1fr; } }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
-    .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em;
-      color: var(--muted); margin: 0 0 12px; font-weight: 600; }
-    .score { font-size: 48px; font-weight: 700; line-height: 1; }
-    .score small { font-size: 18px; color: var(--muted); font-weight: 500; }
-    .pill { display: inline-block; padding: 3px 10px; border-radius: 999px;
-      font-size: 12px; font-weight: 600; margin-top: 10px; }
-    .state-green, .level-low { background: rgba(52,209,122,.15); color: var(--green); }
-    .state-yellow, .level-moderate { background: rgba(242,193,78,.15); color: var(--yellow); }
-    .state-red, .level-high { background: rgba(242,104,90,.15); color: var(--red); }
-    .state-unknown, .level-unknown { background: rgba(154,164,178,.15); color: var(--muted); }
-    .note { color: var(--muted); font-size: 12px; margin-top: 10px; }
-    .breakdown { margin-top: 14px; font-size: 12px; color: var(--muted); }
-    .breakdown span { display: inline-block; margin-right: 12px; }
-    .chart-card { margin-bottom: 20px; }
-    canvas { width: 100%; height: 260px; display: block; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--border); }
+    body {
+      margin: 0; background: var(--plane); color: var(--text);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 20px 16px 72px; }
+    header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+    header h1 { font-size: 21px; margin: 0 0 2px; letter-spacing: -.01em; }
+    header p { color: var(--muted); margin: 0; font-size: 13px; max-width: 34ch; }
+    .btn {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text-2);
+      border-radius: 999px; padding: 7px 13px; cursor: pointer; font-size: 13px; font-weight: 500;
+      white-space: nowrap;
+    }
+    .btn:hover { background: var(--surface-2); }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 20px;
+    }
+    .grid { display: grid; gap: var(--sp); }
+
+    /* Hero */
+    .hero { display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center; margin-bottom: var(--sp); }
+    @media (max-width: 520px) { .hero { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
+    .ring-wrap { position: relative; width: 168px; height: 168px; }
+    .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .ring-score { font-size: 46px; font-weight: 700; line-height: 1; letter-spacing: -.02em; }
+    .ring-score small { font-size: 17px; color: var(--muted); font-weight: 500; }
+    .ring-sub { font-size: 12px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: .05em; }
+    .hero-meta h2 { margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+    .hero-date { font-size: 14px; color: var(--text-2); margin-bottom: 12px; }
+    .status { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 15px; padding: 5px 12px; border-radius: 999px; }
+    .status .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .insight { margin-top: 14px; font-size: 14px; color: var(--text-2); line-height: 1.5; }
+
+    /* Secondary + tiles */
+    .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--sp); margin-bottom: var(--sp); }
+    .tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 15px; }
+    .tile .t-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    .tile .t-val { font-size: 26px; font-weight: 700; margin-top: 6px; letter-spacing: -.02em; }
+    .tile .t-val small { font-size: 14px; color: var(--muted); font-weight: 500; margin-left: 2px; }
+    .tile .t-delta { font-size: 12px; margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+    .t-delta.good { color: var(--good-ink); }
+    .t-delta.bad { color: var(--critical); }
+    .t-delta.neutral { color: var(--muted); }
+    .spark { margin-top: 10px; height: 34px; }
+    .meter { height: 9px; border-radius: 999px; background: var(--hairline); overflow: hidden; margin-top: 10px; }
+    .meter > span { display: block; height: 100%; border-radius: 999px; }
+
+    /* Charts */
+    .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; margin: 0 0 4px; }
+    .chart-card { margin-bottom: var(--sp); position: relative; }
+    .legend { display: flex; gap: 16px; margin: 8px 0 4px; font-size: 12px; color: var(--text-2); flex-wrap: wrap; }
+    .legend i { display: inline-block; width: 14px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 6px; }
+    .legend i.dash { border-top-style: dashed; }
+    .chart-host { position: relative; width: 100%; }
+    .tooltip {
+      position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 7px 9px; font-size: 12px; color: var(--text); box-shadow: 0 4px 14px rgba(0,0,0,.12);
+      transform: translate(-50%, -110%); white-space: nowrap; opacity: 0; transition: opacity .08s; z-index: 5;
+    }
+    .tooltip b { font-variant-numeric: tabular-nums; }
+
+    /* Filter chips */
+    .chips { display: flex; gap: 8px; margin-bottom: var(--sp); flex-wrap: wrap; }
+    .chip { background: var(--surface); border: 1px solid var(--border); color: var(--text-2); border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer; font-weight: 500; }
+    .chip[aria-pressed="true"] { background: var(--series); border-color: var(--series); color: #fff; }
+
+    /* Table */
+    details.card { padding: 0; }
+    details > summary { list-style: none; cursor: pointer; padding: 16px 20px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; display: flex; justify-content: space-between; }
+    details > summary::-webkit-details-marker { display: none; }
+    .table-scroll { overflow-x: auto; padding: 0 8px 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+    th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--hairline); white-space: nowrap; }
     th:first-child, td:first-child { text-align: left; }
-    th { color: var(--muted); font-weight: 600; }
-    .empty { text-align: center; color: var(--muted); padding: 40px 0; }
-    code { background: rgba(127,127,127,.15); padding: 1px 5px; border-radius: 5px; }
-    .setup { max-width: 460px; margin: 40px auto; }
-    .setup label { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 4px; }
-    .setup input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--bg); color: var(--text); font-size: 14px; }
-    .setup button { margin-top: 18px; width: 100%; padding: 11px; border: none; border-radius: 8px;
-      background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+    th { color: var(--muted); font-weight: 600; position: sticky; top: 0; background: var(--surface); }
+
+    .empty { text-align: center; color: var(--muted); padding: 44px 16px; }
+    .foot { color: var(--muted); font-size: 12px; margin-top: 20px; text-align: center; }
+    code { background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
+
+    /* Settings */
+    .setup { max-width: 460px; margin: 32px auto; }
+    .setup label { display: block; font-size: 13px; color: var(--text-2); margin: 14px 0 4px; font-weight: 500; }
+    .setup input { width: 100%; padding: 11px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 14px; }
+    .setup .save { margin-top: 18px; width: 100%; padding: 12px; border: none; border-radius: var(--r-sm); background: var(--series); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
     .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
   </style>
 </head>
@@ -59,175 +128,353 @@
   <div class="wrap">
     <header>
       <div>
-        <h1>Stress &amp; Recovery Insights</h1>
-        <p>Whoop-style scores from your Apple Watch data — baseline-relative, all yours.</p>
+        <h1>Stress &amp; Recovery</h1>
+        <p>Whoop-style insights from your Apple Watch — baseline-relative, all yours.</p>
       </div>
-      <button class="gear" onclick="openSettings()">⚙︎ Settings</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" onclick="toggleTheme()" id="themeBtn" aria-label="Toggle theme">☾</button>
+        <button class="btn" onclick="openSettings()">⚙︎</button>
+      </div>
     </header>
     <div id="content"><div class="empty">Loading…</div></div>
+    <div class="foot" id="foot"></div>
   </div>
 
   <script>
-    const el = (id) => document.getElementById(id);
-    const CFG_KEY = "sri_config";
-    const getCfg = () => { try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch { return {}; } };
-    const setCfg = (c) => localStorage.setItem(CFG_KEY, JSON.stringify(c));
-    const fmt = (v, u = "") => (v == null ? "—" : (Math.round(v * 10) / 10) + u);
+  const $ = (id) => document.getElementById(id);
+  const CFG_KEY = "sri_config";
+  const getCfg = () => { try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch { return {}; } };
+  const setCfg = (c) => localStorage.setItem(CFG_KEY, JSON.stringify(c));
+  const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+  const round = (v,d=1) => v==null ? null : Math.round(v*10**d)/10**d;
+  const fmt = (v,u="") => v==null ? "—" : (round(v)+u);
+  const NS = "http://www.w3.org/2000/svg";
 
-    function openSettings() {
-      const c = getCfg();
-      el("content").innerHTML = `
-        <div class="card setup">
-          <h2>Connect to your Supabase</h2>
-          <label>Insights function URL</label>
-          <input id="cfgUrl" placeholder="https://YOUR-REF.supabase.co/functions/v1/Insights" value="${c.url || ""}" />
-          <div class="hint">Copy the exact URL from your <b>Insights</b> function page in Supabase (mind the capital letter).</div>
-          <label>Supabase anon key</label>
-          <input id="cfgKey" type="password" placeholder="your project's anon / public key (eyJ...)" value="${c.key || ""}" />
-          <div class="hint">Supabase → Project Settings → API → anon/public key. Stored only in this browser.</div>
-          <button onclick="saveSettings()">Save &amp; load</button>
-        </div>`;
+  let RANGE = 30;      // days shown in charts/table
+  let DATA = null;     // last insights payload
+
+  // ---------- theme ----------
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const next = cur === "dark" ? "light" : cur === "light" ? "" : "dark";
+    if (next) document.documentElement.setAttribute("data-theme", next);
+    else document.documentElement.removeAttribute("data-theme");
+    localStorage.setItem("sri_theme", next);
+    if (DATA) render(DATA);
+  }
+  (function initTheme(){ const t = localStorage.getItem("sri_theme"); if (t) document.documentElement.setAttribute("data-theme", t); })();
+
+  // ---------- settings ----------
+  function openSettings() {
+    const c = getCfg();
+    $("content").innerHTML = `
+      <div class="card setup">
+        <h2 style="margin:0 0 4px; font-size:16px;">Connect to your Supabase</h2>
+        <label>Insights function URL</label>
+        <input id="cfgUrl" placeholder="https://YOUR-REF.supabase.co/functions/v1/Insights" value="${c.url || ""}" />
+        <div class="hint">Copy the exact URL from your <b>Insights</b> function page in Supabase (mind the capital letter).</div>
+        <label>Supabase anon key</label>
+        <input id="cfgKey" type="password" placeholder="your project's anon / public key (eyJ...)" value="${c.key || ""}" />
+        <div class="hint">Supabase → Project Settings → API → anon/public key. Stored only in this browser.</div>
+        <button class="save" onclick="saveSettings()">Save &amp; load</button>
+      </div>`;
+    $("foot").textContent = "";
+  }
+  function saveSettings() {
+    setCfg({ url: $("cfgUrl").value.trim().replace(/\/+$/, ""), key: $("cfgKey").value.trim() });
+    load();
+  }
+
+  // ---------- data ----------
+  async function load() {
+    const c = getCfg();
+    if (!c.url) return openSettings();
+    $("content").innerHTML = '<div class="empty">Loading your data…</div>';
+    let data;
+    try {
+      const sep = c.url.includes("?") ? "&" : "?";
+      const res = await fetch(`${c.url}${sep}apikey=${encodeURIComponent(c.key || "")}`);
+      if (res.status === 401) return errBox("Unauthorized — check your anon key.");
+      data = await res.json();
+    } catch (e) { return errBox("Could not reach the insights function. Check the URL."); }
+    if (!data || !data.count) {
+      $("content").innerHTML = `<div class="card"><div class="empty">
+        Connected — but no data yet. Trigger a Health Auto Export sync, then refresh.</div></div>`;
+      return;
     }
+    DATA = data; render(data);
+  }
+  const errBox = (m) => { $("content").innerHTML =
+    `<div class="card"><div class="empty">${m}<br><br><button class="btn" onclick="openSettings()">Open settings</button></div></div>`; };
 
-    function saveSettings() {
-      const url = el("cfgUrl").value.trim().replace(/\/+$/, "");
-      const key = el("cfgKey").value.trim();
-      setCfg({ url, key });
-      load();
+  // ---------- derived helpers ----------
+  function trailingAvg(hist, field, endExcl, win=7) {
+    const vals = [];
+    for (let i = Math.max(0, endExcl - win); i < endExcl; i++) {
+      const v = hist[i]?.raw?.[field];
+      if (v != null) vals.push(v);
     }
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  }
+  function rollingAvg(series, win=7) {
+    return series.map((_, i) => {
+      const s = []; for (let j = Math.max(0, i-win+1); j <= i; j++) if (series[j] != null) s.push(series[j]);
+      return s.length ? s.reduce((a,b)=>a+b,0)/s.length : null;
+    });
+  }
 
-    async function load() {
-      const c = getCfg();
-      if (!c.url) return openSettings();
-      el("content").innerHTML = '<div class="empty">Loading…</div>';
-      let data;
-      try {
-        // Pass the anon key as a query param (a "simple" GET) to avoid a CORS
-        // preflight, and use the exact function URL the user pasted.
-        const sep = c.url.includes("?") ? "&" : "?";
-        const res = await fetch(`${c.url}${sep}apikey=${encodeURIComponent(c.key || "")}`);
-        if (res.status === 401) { el("content").innerHTML = errBox("Unauthorized — check your API key."); return; }
-        data = await res.json();
-      } catch (e) {
-        el("content").innerHTML = errBox("Could not reach the insights function. Check the URL.");
-        return;
-      }
-      if (!data.count) {
-        el("content").innerHTML = `<div class="card"><div class="empty">
-          Connected, but no data yet. Trigger a Health Auto Export sync to <code>/ingest</code>.
-        </div></div>`;
-        return;
-      }
-      render(data);
+  const METRICS = [
+    { key:"hrv", label:"HRV", unit:" ms", good:"up" },
+    { key:"resting_hr", label:"Resting HR", unit:" bpm", good:"down" },
+    { key:"sleep_hours", label:"Sleep", unit:" h", good:"up" },
+    { key:"respiratory_rate", label:"Respiratory", unit:" br/min", good:"flat" },
+    { key:"wrist_temperature", label:"Wrist temp", unit:" °C", good:"flat" },
+    { key:"spo2", label:"Blood O₂", unit:" %", good:"up" },
+  ];
+  const STATUS = {
+    green:{ word:"High", color:"var(--good)", icon:"▲" },
+    yellow:{ word:"Moderate", color:"var(--warning)", icon:"■" },
+    red:{ word:"Low", color:"var(--critical)", icon:"▼" },
+    unknown:{ word:"—", color:"var(--muted)", icon:"·" },
+  };
+  const STRESS_STATUS = {
+    low:{ word:"Low", color:"var(--good)" },
+    moderate:{ word:"Moderate", color:"var(--warning)" },
+    high:{ word:"High", color:"var(--critical)" },
+    unknown:{ word:"—", color:"var(--muted)" },
+  };
+
+  function deltaInfo(cur, base, good) {
+    if (cur == null || base == null || base === 0) return { txt:"—", cls:"neutral" };
+    const pct = (cur - base) / Math.abs(base) * 100;
+    const arrow = pct > 0.5 ? "↑" : pct < -0.5 ? "↓" : "→";
+    let cls = "neutral";
+    if (good === "up") cls = pct > 0.5 ? "good" : pct < -0.5 ? "bad" : "neutral";
+    else if (good === "down") cls = pct < -0.5 ? "good" : pct > 0.5 ? "bad" : "neutral";
+    return { txt:`${arrow} ${Math.abs(pct).toFixed(0)}% vs 7-day`, cls };
+  }
+
+  function makeInsight(latest) {
+    const r = latest.recovery, s = latest.stress;
+    if (r.note && (r.state === "unknown")) return r.note;
+    const c = r.contributions || {};
+    const hrv = c.hrv, rhr = c.resting_hr, sl = c.sleep_hours;
+    if (r.state === "green")
+      return `You're well recovered${hrv?` — HRV ${hrv.z>=0?"above":"around"} your baseline`:""}. A good day to train hard.`;
+    if (r.state === "yellow")
+      return `Moderate recovery. Your body is partly loaded — train, but keep intensity in check and prioritise sleep tonight.`;
+    if (r.state === "red") {
+      const drivers = [];
+      if (hrv && hrv.z < -0.5) drivers.push("HRV is down");
+      if (rhr && rhr.z > 0.5) drivers.push("resting HR is up");
+      if (sl && sl.value < 7) drivers.push("sleep was short");
+      return `Low recovery${drivers.length?` — ${drivers.join(", ")}`:""}. Favour rest, hydration and easy movement today.`;
     }
+    return "";
+  }
 
-    const errBox = (msg) => `<div class="card"><div class="empty">${msg}
-      <br/><br/><button class="gear" onclick="openSettings()">Open settings</button></div></div>`;
+  // ---------- render ----------
+  function render(data) {
+    const hist = data.history;
+    const latest = data.latest;
+    const rec = latest.recovery, stress = latest.stress;
+    const st = STATUS[rec.state] || STATUS.unknown;
 
-    function render(data) {
-      const L = data.latest, rec = L.recovery, stress = L.stress;
-      const breakdown = Object.entries(rec.contributions || {})
-        .map(([k, v]) => `<span>${k}: <b>${v.value}</b> (base ${v.baseline})</span>`).join("");
+    // hero ring geometry
+    const pct = rec.score != null ? rec.score : 0;
+    const R = 74, C = 2*Math.PI*R, off = C * (1 - pct/100);
 
-      el("content").innerHTML = `
-        <div class="cards">
-          <div class="card">
-            <h2>Recovery — ${L.date}</h2>
-            <div class="score">${rec.score ?? "—"}<small>${rec.score != null ? "%" : ""}</small></div>
-            <span class="pill state-${rec.state}">${rec.state}</span>
-            ${rec.note ? `<div class="note">${rec.note}</div>` : ""}
-            <div class="breakdown">${breakdown}</div>
-          </div>
-          <div class="card">
-            <h2>Stress — ${L.date}</h2>
-            <div class="score">${stress.score ?? "—"}<small>${stress.score != null ? " / 3" : ""}</small></div>
-            <span class="pill level-${stress.level}">${stress.level}</span>
-            ${stress.note ? `<div class="note">${stress.note}</div>` : ""}
+    // tiles
+    const tiles = METRICS.map(m => {
+      const cur = latest.raw[m.key];
+      const base = trailingAvg(hist, m.key, hist.length - 1, 7);
+      const d = deltaInfo(cur, base, m.good);
+      const spark = hist.slice(-14).map(h => h.raw[m.key]);
+      return `<div class="tile">
+        <div class="t-label">${m.label}</div>
+        <div class="t-val">${fmt(cur)}<small>${cur!=null?m.unit:""}</small></div>
+        <div class="t-delta ${d.cls}">${d.txt}</div>
+        <div class="spark" data-spark='${JSON.stringify(spark)}'></div>
+      </div>`;
+    }).join("");
+
+    // stress meter (0-3)
+    const ss = STRESS_STATUS[stress.level] || STRESS_STATUS.unknown;
+    const sPct = stress.score != null ? clamp(stress.score/3*100, 3, 100) : 0;
+
+    $("content").innerHTML = `
+      <div class="card hero">
+        <div class="ring-wrap">
+          <svg width="168" height="168" viewBox="0 0 168 168" aria-hidden="true">
+            <circle cx="84" cy="84" r="${R}" fill="none" stroke="var(--hairline)" stroke-width="13"/>
+            <circle cx="84" cy="84" r="${R}" fill="none" stroke="${st.color}" stroke-width="13"
+              stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}"
+              transform="rotate(-90 84 84)"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-score">${rec.score ?? "—"}<small>${rec.score!=null?"%":""}</small></div>
+            <div class="ring-sub">Recovery</div>
           </div>
         </div>
-        <div class="card chart-card"><h2>Recovery &amp; Stress trend</h2><canvas id="trend"></canvas></div>
-        <div class="card chart-card"><h2>Underlying signals (HRV &amp; resting HR)</h2><canvas id="signals"></canvas></div>
-        <div class="card"><h2>Daily log</h2><div style="overflow-x:auto"><table>
-          <thead><tr><th>Date</th><th>Recovery</th><th>Stress</th><th>HRV</th>
-            <th>Rest HR</th><th>Sleep</th><th>Resp</th><th>Temp</th></tr></thead>
-          <tbody>${data.history.slice().reverse().map(d => `<tr>
+        <div class="hero-meta">
+          <h2>Today · ${latest.date}</h2>
+          <div class="status" style="background:color-mix(in srgb, ${st.color} 15%, transparent); color:${st.color};">
+            <span class="dot" style="background:${st.color}"></span>${st.icon} ${st.word} recovery
+          </div>
+          <div class="insight">${makeInsight(latest)}</div>
+        </div>
+      </div>
+
+      <div class="tiles">
+        <div class="tile">
+          <div class="t-label">Stress</div>
+          <div class="t-val">${stress.score ?? "—"}<small>${stress.score!=null?" / 3":""}</small></div>
+          <div class="t-delta neutral" style="color:${ss.color}; font-weight:600;">${ss.word}</div>
+          <div class="meter"><span style="width:${sPct}%; background:${ss.color};"></span></div>
+        </div>
+        ${tiles}
+      </div>
+
+      <div class="chips" id="chips">
+        ${[7,30,90,9999].map(n => `<button class="chip" aria-pressed="${RANGE===n}" onclick="setRange(${n})">${n===9999?"All":n+"d"}</button>`).join("")}
+      </div>
+
+      <div class="card chart-card">
+        <div class="section-title">Recovery</div>
+        <div class="legend"><span><i style="border-color:var(--series)"></i>Daily</span><span><i class="dash" style="border-color:var(--muted)"></i>7-day average</span></div>
+        <div class="chart-host" id="recHost"></div>
+      </div>
+
+      <div class="card chart-card">
+        <div class="section-title">Stress (0–3)</div>
+        <div class="legend"><span><i style="border-color:var(--series)"></i>Daily</span><span><i class="dash" style="border-color:var(--muted)"></i>7-day average</span></div>
+        <div class="chart-host" id="strHost"></div>
+      </div>
+
+      <div class="card chart-card">
+        <div class="section-title">HRV &amp; Resting heart rate</div>
+        <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px;" id="signalGrid">
+          <div><div class="legend"><span><i style="border-color:var(--series)"></i>HRV (ms)</span></div><div class="chart-host" id="hrvHost"></div></div>
+          <div><div class="legend"><span><i style="border-color:var(--series)"></i>Resting HR (bpm)</span></div><div class="chart-host" id="rhrHost"></div></div>
+        </div>
+      </div>
+
+      <details class="card">
+        <summary><span>Daily log</span><span>▾</span></summary>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Date</th><th>Rec</th><th>Stress</th><th>HRV</th><th>Rest HR</th><th>Sleep</th><th>Resp</th><th>Temp</th><th>O₂</th></tr></thead>
+          <tbody>${slice(hist).slice().reverse().map(d => `<tr>
             <td>${d.date}</td><td>${fmt(d.recovery.score)}</td><td>${fmt(d.stress.score)}</td>
-            <td>${fmt(d.raw.hrv)}</td><td>${fmt(d.raw.resting_hr)}</td>
-            <td>${fmt(d.raw.sleep_hours, "h")}</td><td>${fmt(d.raw.respiratory_rate)}</td>
-            <td>${fmt(d.raw.wrist_temperature)}</td></tr>`).join("")}</tbody>
-        </table></div></div>`;
+            <td>${fmt(d.raw.hrv)}</td><td>${fmt(d.raw.resting_hr)}</td><td>${fmt(d.raw.sleep_hours)}</td>
+            <td>${fmt(d.raw.respiratory_rate)}</td><td>${fmt(d.raw.wrist_temperature)}</td><td>${fmt(d.raw.spo2)}</td>
+          </tr>`).join("")}</tbody>
+        </table></div>
+      </details>`;
 
-      drawCharts(data.history);
-    }
+    $("foot").innerHTML = data.count < 6
+      ? `Baseline still forming (${data.count} days). Scores sharpen after ~5 days of data.`
+      : `${data.count} days tracked · baseline window ${data.baseline_window_days} days`;
 
-    const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+    // draw sparklines + charts
+    document.querySelectorAll(".spark").forEach(el => sparkline(el, JSON.parse(el.dataset.spark)));
+    drawCharts();
+  }
 
-    function lineChart(canvas, opts) {
-      const dpr = window.devicePixelRatio || 1;
-      const cssW = canvas.clientWidth || 900, cssH = 260;
-      canvas.width = cssW * dpr; canvas.height = cssH * dpr; canvas.style.height = cssH + "px";
-      const ctx = canvas.getContext("2d"); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, cssW, cssH);
-      const pad = { l: 44, r: 44, t: 18, b: 26 }, W = cssW - pad.l - pad.r, H = cssH - pad.t - pad.b;
-      const muted = cssVar("--muted"), grid = "rgba(127,127,127,.18)", n = opts.labels.length;
-      const xAt = (i) => pad.l + (n <= 1 ? W / 2 : (i / (n - 1)) * W);
-      const rangeOf = (series) => {
-        const vals = series.flatMap(s => s.data).filter(v => v != null);
-        let lo = Math.min(...vals), hi = Math.max(...vals);
-        if (!isFinite(lo)) { lo = 0; hi = 1; }
-        if (opts.fixed) { lo = opts.fixed[0]; hi = opts.fixed[1]; }
-        else { const p = (hi - lo) * 0.15 || 1; lo -= p; hi += p; }
-        return [lo, hi];
-      };
-      const left = opts.series.filter(s => s.axis !== "right"), right = opts.series.filter(s => s.axis === "right");
-      const lr = rangeOf(left), rr = right.length ? rangeOf(right) : lr;
-      const yL = (v) => pad.t + H - ((v - lr[0]) / (lr[1] - lr[0] || 1)) * H;
-      const yR = (v) => pad.t + H - ((v - rr[0]) / (rr[1] - rr[0] || 1)) * H;
-      ctx.strokeStyle = grid; ctx.fillStyle = muted; ctx.font = "11px sans-serif"; ctx.textBaseline = "middle";
-      for (let g = 0; g <= 4; g++) {
-        const y = pad.t + (g / 4) * H;
-        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + W, y); ctx.stroke();
-        ctx.textAlign = "right"; ctx.fillText((lr[1] - (g / 4) * (lr[1] - lr[0])).toFixed(0), pad.l - 6, y);
-        if (right.length) { ctx.textAlign = "left"; ctx.fillText((rr[1] - (g / 4) * (rr[1] - rr[0])).toFixed(1), pad.l + W + 6, y); }
+  function slice(hist) { return RANGE >= 9999 ? hist : hist.slice(-RANGE); }
+  function setRange(n) { RANGE = n; if (DATA) render(DATA); }
+
+  function drawCharts() {
+    const h = slice(DATA.history);
+    const labels = h.map(d => d.date.slice(5));
+    const rec = h.map(d => d.recovery.score);
+    const str = h.map(d => d.stress.score);
+    lineChart($("recHost"), { labels, series:[
+      { name:"Daily", data:rec, color:"var(--series)", fill:true },
+      { name:"7-day", data:rollingAvg(rec), color:"var(--muted)", dash:true },
+    ], yMin:0, yMax:100, unit:"%" });
+    lineChart($("strHost"), { labels, series:[
+      { name:"Daily", data:str, color:"var(--series)", fill:true },
+      { name:"7-day", data:rollingAvg(str), color:"var(--muted)", dash:true },
+    ], yMin:0, yMax:3, unit:"" });
+    lineChart($("hrvHost"), { labels, series:[{ name:"HRV", data:h.map(d=>d.raw.hrv), color:"var(--series)", fill:true }], unit:" ms" });
+    lineChart($("rhrHost"), { labels, series:[{ name:"Resting HR", data:h.map(d=>d.raw.resting_hr), color:"var(--series)", fill:true }], unit:" bpm" });
+  }
+
+  // ---------- tiny sparkline (single series, no axes) ----------
+  function sparkline(host, data) {
+    const W = host.clientWidth || 130, H = 34, pad = 3;
+    const vals = data.filter(v => v != null);
+    if (vals.length < 2) { host.innerHTML = `<svg width="${W}" height="${H}"></svg>`; return; }
+    const lo = Math.min(...vals), hi = Math.max(...vals), span = (hi-lo)||1;
+    const n = data.length;
+    const x = i => pad + (n<=1?0:(i/(n-1))*(W-2*pad));
+    const y = v => pad + (1-(v-lo)/span)*(H-2*pad);
+    let dPath="", started=false, last=null;
+    data.forEach((v,i)=>{ if(v==null){started=false;return;} const px=x(i),py=y(v);
+      dPath += (started?"L":"M")+px.toFixed(1)+" "+py.toFixed(1)+" "; started=true; last=[px,py]; });
+    host.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+      <path d="${dPath}" fill="none" stroke="var(--series)" stroke-width="1.6" stroke-linejoin="round"/>
+      ${last?`<circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.4" fill="var(--series)"/>`:""}
+    </svg>`;
+  }
+
+  // ---------- line chart (single y-axis) with hover ----------
+  function lineChart(host, opts) {
+    const W = host.clientWidth || 300, H = 210;
+    const pad = { l:32, r:12, t:12, b:22 };
+    const plotW = W-pad.l-pad.r, plotH = H-pad.t-pad.b;
+    const all = opts.series.flatMap(s => s.data).filter(v => v!=null);
+    let lo = opts.yMin!=null ? opts.yMin : Math.min(...all);
+    let hi = opts.yMax!=null ? opts.yMax : Math.max(...all);
+    if (opts.yMin==null) { const p=(hi-lo)*0.12||1; lo-=p; hi+=p; }
+    const n = opts.labels.length;
+    const X = i => pad.l + (n<=1?plotW/2:(i/(n-1))*plotW);
+    const Y = v => pad.t + (1-(v-lo)/((hi-lo)||1))*plotH;
+
+    let grid="", ylab="";
+    for (let g=0; g<=3; g++){ const yy=pad.t+(g/3)*plotH; const val=hi-(g/3)*(hi-lo);
+      grid += `<line x1="${pad.l}" y1="${yy}" x2="${pad.l+plotW}" y2="${yy}" stroke="var(--hairline)" stroke-width="1"/>`;
+      ylab += `<text x="${pad.l-6}" y="${yy+3}" text-anchor="end" font-size="10" fill="var(--muted)">${round(val,0)}</text>`; }
+    let xlab=""; const step=Math.max(1,Math.ceil(n/6));
+    for (let i=0;i<n;i+=step) xlab += `<text x="${X(i)}" y="${H-6}" text-anchor="middle" font-size="10" fill="var(--muted)">${opts.labels[i]}</text>`;
+
+    let paths="";
+    opts.series.forEach(s => {
+      let d="", started=false, area="";
+      s.data.forEach((v,i)=>{ if(v==null){started=false;return;} const px=X(i),py=Y(v);
+        d += (started?"L":"M")+px.toFixed(1)+" "+py.toFixed(1)+" "; started=true; });
+      if (s.fill && d) {
+        // build area under the (contiguous) line
+        const pts = s.data.map((v,i)=>v==null?null:[X(i),Y(v)]).filter(Boolean);
+        if (pts.length) area = `<path d="M${pts[0][0]} ${pad.t+plotH} L`+pts.map(p=>p[0]+" "+p[1]).join(" L")+` L${pts[pts.length-1][0]} ${pad.t+plotH} Z" fill="var(--series-soft)"/>`;
       }
-      ctx.textAlign = "center"; ctx.textBaseline = "top";
-      const step = Math.ceil(n / 8);
-      for (let i = 0; i < n; i += step) ctx.fillText(opts.labels[i], xAt(i), pad.t + H + 6);
-      for (const s of opts.series) {
-        const yFn = s.axis === "right" ? yR : yL;
-        ctx.strokeStyle = s.color; ctx.lineWidth = 2; ctx.beginPath(); let started = false;
-        s.data.forEach((v, i) => {
-          if (v == null) { started = false; return; }
-          const x = xAt(i), y = yFn(v);
-          if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-      }
-      let lx = pad.l; ctx.textBaseline = "middle"; ctx.textAlign = "left";
-      for (const s of opts.series) {
-        ctx.fillStyle = s.color; ctx.fillRect(lx, pad.t - 12, 10, 3);
-        ctx.fillStyle = muted; ctx.fillText(s.label, lx + 14, pad.t - 10);
-        lx += ctx.measureText(s.label).width + 40;
-      }
-    }
+      paths += area + `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" ${s.dash?'stroke-dasharray="4 4"':''}/>`;
+    });
 
-    let _render = null;
-    function drawCharts(history) {
-      const labels = history.map(d => d.date.slice(5));
-      _render = () => {
-        lineChart(el("trend"), { labels, fixed: [0, 100], series: [
-          { label: "Recovery %", color: "#34d17a", axis: "left", data: history.map(d => d.recovery.score) },
-          { label: "Stress (0-3)", color: "#f2685a", axis: "right", data: history.map(d => d.stress.score) },
-        ] });
-        lineChart(el("signals"), { labels, series: [
-          { label: "HRV (ms)", color: "#5b8cff", axis: "left", data: history.map(d => d.raw.hrv) },
-          { label: "Resting HR (bpm)", color: "#f2c14e", axis: "right", data: history.map(d => d.raw.resting_hr) },
-        ] });
-      };
-      _render();
+    host.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="touch-action:none;">
+      ${grid}${ylab}${xlab}${paths}
+      <line id="cross" x1="0" y1="${pad.t}" x2="0" y2="${pad.t+plotH}" stroke="var(--muted)" stroke-width="1" opacity="0"/>
+      <rect x="${pad.l}" y="${pad.t}" width="${plotW}" height="${plotH}" fill="transparent"/>
+    </svg><div class="tooltip"></div>`;
+    const svg = host.querySelector("svg"), cross = host.querySelector("#cross"), tip = host.querySelector(".tooltip");
+    function move(e){
+      const rect = svg.getBoundingClientRect();
+      const cx = (e.touches?e.touches[0].clientX:e.clientX) - rect.left;
+      const i = clamp(Math.round((cx-pad.l)/(plotW||1)*(n-1)), 0, n-1);
+      if (opts.labels[i]==null) return;
+      cross.setAttribute("x1", X(i)); cross.setAttribute("x2", X(i)); cross.setAttribute("opacity","1");
+      const rows = opts.series.map(s => s.data[i]==null?null:`${s.name}: <b>${round(s.data[i])}${opts.unit||""}</b>`).filter(Boolean).join("<br>");
+      tip.innerHTML = `<div style="color:var(--muted);margin-bottom:2px">${opts.labels[i]}</div>${rows}`;
+      tip.style.left = clamp(X(i),40,W-40)+"px"; tip.style.top = pad.t+8+"px"; tip.style.opacity = "1";
     }
-    window.addEventListener("resize", () => _render && _render());
+    function leave(){ cross.setAttribute("opacity","0"); tip.style.opacity="0"; }
+    svg.addEventListener("pointermove", move);
+    svg.addEventListener("pointerleave", leave);
+    svg.addEventListener("touchmove", move, {passive:true});
+  }
 
-    load();
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => DATA && render(DATA), 200); });
+  load();
   </script>
 </body>
 </html>
