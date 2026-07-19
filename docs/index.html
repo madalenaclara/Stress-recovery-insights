@@ -79,9 +79,9 @@
       el("content").innerHTML = `
         <div class="card setup">
           <h2>Connect to your Supabase</h2>
-          <label>Functions base URL</label>
-          <input id="cfgUrl" placeholder="https://YOUR-REF.supabase.co/functions/v1" value="${c.url || ""}" />
-          <div class="hint">From your Supabase project → Edge Functions. Ends in <code>/functions/v1</code>.</div>
+          <label>Insights function URL</label>
+          <input id="cfgUrl" placeholder="https://YOUR-REF.supabase.co/functions/v1/Insights" value="${c.url || ""}" />
+          <div class="hint">Copy the exact URL from your <b>Insights</b> function page in Supabase (mind the capital letter).</div>
           <label>Supabase anon key</label>
           <input id="cfgKey" type="password" placeholder="your project's anon / public key (eyJ...)" value="${c.key || ""}" />
           <div class="hint">Supabase → Project Settings → API → anon/public key. Stored only in this browser.</div>
@@ -102,9 +102,10 @@
       el("content").innerHTML = '<div class="empty">Loading…</div>';
       let data;
       try {
-        const res = await fetch(`${c.url}/insights`, {
-          headers: { apikey: c.key || "", Authorization: `Bearer ${c.key || ""}` },
-        });
+        // Pass the anon key as a query param (a "simple" GET) to avoid a CORS
+        // preflight, and use the exact function URL the user pasted.
+        const sep = c.url.includes("?") ? "&" : "?";
+        const res = await fetch(`${c.url}${sep}apikey=${encodeURIComponent(c.key || "")}`);
         if (res.status === 401) { el("content").innerHTML = errBox("Unauthorized — check your API key."); return; }
         data = await res.json();
       } catch (e) {
