@@ -346,8 +346,18 @@
     if (/swim/.test(t)) return "🏊"; if (/strength|weight|lift|function/.test(t)) return "🏋️"; if (/yoga|pilates|flex/.test(t)) return "🧘";
     if (/hiit|interval/.test(t)) return "🔥"; if (/row/.test(t)) return "🚣"; if (/danc/.test(t)) return "💃"; return "🏅"; };
 
+  function freshness(dateStr) {
+    const t = new Date();
+    const today = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
+    const days = Math.round((new Date(today+"T00:00:00") - new Date(dateStr+"T00:00:00")) / 86400000);
+    if (days <= 0) return { label:"Today", stale:false };
+    if (days === 1) return { label:"Yesterday", stale:false };
+    return { label:`${days} days ago`, stale:true, days };
+  }
+
   function render(data) {
     const hist = data.history, latest = data.latest;
+    const fresh = freshness(latest.date);
     const rec = latest.recovery, stress = latest.stress, strain = latest.strain || {score:null,level:"unknown"};
     const st = STATUS[rec.state] || STATUS.unknown;
     const pct = rec.score != null ? rec.score : 0;
@@ -380,7 +390,8 @@
           <div class="ring-center"><div class="ring-score">${rec.score ?? "—"}<small>${rec.score!=null?"%":""}</small></div><div class="ring-sub">Recovery</div></div>
         </div>
         <div class="hero-meta">
-          <h2>Today · ${latest.date}</h2>
+          <h2>${fresh.label} · ${latest.date}</h2>
+          ${fresh.stale ? `<div style="font-size:12px;color:var(--warning);margin-bottom:8px;">⚠ Last sync was ${fresh.days} days ago — run your Health Auto Export automation to update.</div>` : ""}
           <div class="status" style="background:color-mix(in srgb, ${st.color} 15%, transparent); color:${st.color};">
             <span class="dot" style="background:${st.color}"></span>${st.icon} ${st.word} recovery</div>
           <div class="insight">${makeInsightLine(latest)}</div>
