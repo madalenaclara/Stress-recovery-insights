@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stress &amp; Recovery Insights</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --plane: #f9f9f7; --surface: #ffffff; --surface-2: #fbfbfa;
+      --border: rgba(11,11,11,0.10); --hairline: #e1e0d9;
+      --text: #0b0b0b; --text-2: #52514e; --muted: #898781;
+      --series: #2a78d6; --series-soft: rgba(42,120,214,.14);
+      --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
+      --good-ink: #006300;
+      --r-lg: 18px; --r-md: 14px; --r-sm: 10px; --sp: 16px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:where(:not([data-theme="light"])) {
+        --plane: #0d0d0d; --surface: #1a1a19; --surface-2: #201f1e;
+        --border: rgba(255,255,255,0.10); --hairline: #2c2c2a;
+        --text: #ffffff; --text-2: #c3c2b7; --muted: #898781;
+        --series: #3987e5; --series-soft: rgba(57,135,229,.16); --good-ink: #0ca30c;
+      }
+    }
+    :root[data-theme="dark"] {
+      --plane: #0d0d0d; --surface: #1a1a19; --surface-2: #201f1e;
+      --border: rgba(255,255,255,0.10); --hairline: #2c2c2a;
+      --text: #ffffff; --text-2: #c3c2b7; --muted: #898781;
+      --series: #3987e5; --series-soft: rgba(57,135,229,.16); --good-ink: #0ca30c;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--plane); color: var(--text);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 20px 16px 72px; }
+    header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+    header h1 { font-size: 21px; margin: 0 0 2px; letter-spacing: -.01em; }
+    header p { color: var(--muted); margin: 0; font-size: 13px; max-width: 34ch; }
+    .btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-2);
+      border-radius: 999px; padding: 7px 13px; cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; }
+    .btn:hover { background: var(--surface-2); }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; }
+    .grid { display: grid; gap: var(--sp); }
+
+    .hero { display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center; margin-bottom: var(--sp); }
+    @media (max-width: 520px) { .hero { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
+    .ring-wrap { position: relative; width: 168px; height: 168px; }
+    .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .ring-score { font-size: 46px; font-weight: 700; line-height: 1; letter-spacing: -.02em; }
+    .ring-score small { font-size: 17px; color: var(--muted); font-weight: 500; }
+    .ring-sub { font-size: 12px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: .05em; }
+    .hero-meta h2 { margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+    .status { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 15px; padding: 5px 12px; border-radius: 999px; }
+    .status .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .insight { margin-top: 14px; font-size: 14px; color: var(--text-2); line-height: 1.5; }
+
+    /* Daily review */
+    .review { border-left: 4px solid var(--muted); margin-bottom: var(--sp); }
+    .review.good { border-left-color: var(--good); }
+    .review.warning { border-left-color: var(--warning); }
+    .review.critical { border-left-color: var(--critical); }
+    .review .r-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .review h3 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
+    .review .target { font-size: 12px; color: var(--text-2); background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 999px; padding: 4px 11px; white-space: nowrap; }
+    .review .target b { color: var(--text); }
+    .review .r-body { margin: 8px 0 0; color: var(--text-2); font-size: 14px; }
+    .tips { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 6px; }
+    .tips li { font-size: 13px; color: var(--text-2); padding-left: 20px; position: relative; }
+    .tips li::before { content: "→"; position: absolute; left: 0; color: var(--muted); }
+
+    .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--sp); margin-bottom: var(--sp); }
+    .tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 15px; }
+    .tile .t-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    .tile .t-val { font-size: 26px; font-weight: 700; margin-top: 6px; letter-spacing: -.02em; }
+    .tile .t-val small { font-size: 14px; color: var(--muted); font-weight: 500; margin-left: 2px; }
+    .tile .t-delta { font-size: 12px; margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+    .t-delta.good { color: var(--good-ink); } .t-delta.bad { color: var(--critical); } .t-delta.neutral { color: var(--muted); }
+    .spark { margin-top: 10px; height: 34px; }
+    .meter { height: 9px; border-radius: 999px; background: var(--hairline); overflow: hidden; margin-top: 10px; }
+    .meter > span { display: block; height: 100%; border-radius: 999px; }
+
+    /* Weekly */
+    .week { margin-bottom: var(--sp); }
+    .week h3 { margin: 0 0 14px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+    .week-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; }
+    .ws .ws-v { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+    .ws .ws-l { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* gamification */
+    .block { margin-bottom: var(--sp); }
+    .block h3 { margin: 0 0 14px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+    .goals { display: grid; gap: 14px; }
+    .goal .g-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+    .goal .g-top b { font-variant-numeric: tabular-nums; }
+    .goal .g-done { color: var(--good-ink); font-weight: 600; }
+    .badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; }
+    .badge { text-align: center; padding: 12px 8px; border-radius: var(--r-md); border: 1px solid var(--border); background: var(--surface-2); }
+    .badge.locked { opacity: .4; filter: grayscale(1); }
+    .badge .b-ico { font-size: 26px; line-height: 1; }
+    .badge .b-name { font-size: 11px; font-weight: 600; margin-top: 6px; }
+    .badge .b-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .records { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 14px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--hairline); }
+    .rec-v { font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+    .rec-l { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    /* workouts */
+    .wk-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--hairline); }
+    .wk-row:last-child { border-bottom: none; }
+    .wk-ico { font-size: 22px; width: 30px; text-align: center; }
+    .wk-main { flex: 1; min-width: 0; }
+    .wk-type { font-weight: 600; font-size: 14px; }
+    .wk-date { font-size: 12px; color: var(--muted); }
+    .wk-stats { text-align: right; font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .wk-stats b { color: var(--text); font-size: 14px; }
+
+    .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; margin: 0 0 4px; }
+    .chart-card { margin-bottom: var(--sp); position: relative; }
+    .legend { display: flex; gap: 16px; margin: 8px 0 4px; font-size: 12px; color: var(--text-2); flex-wrap: wrap; }
+    .legend i { display: inline-block; width: 14px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 6px; }
+    .legend i.dash { border-top-style: dashed; }
+    .chart-host { position: relative; width: 100%; }
+    .tooltip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 7px 9px; font-size: 12px; color: var(--text); box-shadow: 0 4px 14px rgba(0,0,0,.12);
+      transform: translate(-50%, -110%); white-space: nowrap; opacity: 0; transition: opacity .08s; z-index: 5; }
+    .tooltip b { font-variant-numeric: tabular-nums; }
+
+    .chips { display: flex; gap: 8px; margin-bottom: var(--sp); flex-wrap: wrap; }
+    .chip { background: var(--surface); border: 1px solid var(--border); color: var(--text-2); border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer; font-weight: 500; }
+    .chip[aria-pressed="true"] { background: var(--series); border-color: var(--series); color: #fff; }
+
+    details.card { padding: 0; }
+    details > summary { list-style: none; cursor: pointer; padding: 16px 20px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; display: flex; justify-content: space-between; }
+    details > summary::-webkit-details-marker { display: none; }
+    .table-scroll { overflow-x: auto; padding: 0 8px 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+    th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--hairline); white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: var(--muted); font-weight: 600; position: sticky; top: 0; background: var(--surface); }
+
+    .empty { text-align: center; color: var(--muted); padding: 44px 16px; }
+    .foot { color: var(--muted); font-size: 12px; margin-top: 20px; text-align: center; }
+    code { background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
+    .setup { max-width: 460px; margin: 32px auto; }
+    .setup label { display: block; font-size: 13px; color: var(--text-2); margin: 14px 0 4px; font-weight: 500; }
+    .setup input { width: 100%; padding: 11px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 14px; }
+    .setup .save { margin-top: 18px; width: 100%; padding: 12px; border: none; border-radius: var(--r-sm); background: var(--series); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Stress &amp; Recovery</h1>
+        <p>Whoop-style insights from your Apple Watch — baseline-relative, all yours.</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" onclick="toggleTheme()" aria-label="Toggle theme">☾</button>
+        <button class="btn" onclick="openSettings()">⚙︎</button>
+      </div>
+    </header>
+    <div id="content"><div class="empty">Loading…</div></div>
+    <div class="foot" id="foot"></div>
+  </div>
+
+  <script>
+  const $ = (id) => document.getElementById(id);
+  const CFG_KEY = "sri_config";
+  const getCfg = () => { try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch { return {}; } };
+  const setCfg = (c) => localStorage.setItem(CFG_KEY, JSON.stringify(c));
+  const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+  const round = (v,d=1) => v==null ? null : Math.round(v*10**d)/10**d;
+  const fmt = (v,u="") => v==null ? "—" : (round(v)+u);
+  const avg = (a) => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+
+  let RANGE = 30, DATA = null;
+
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const next = cur === "dark" ? "light" : cur === "light" ? "" : "dark";
+    if (next) document.documentElement.setAttribute("data-theme", next);
+    else document.documentElement.removeAttribute("data-theme");
+    localStorage.setItem("sri_theme", next);
+    if (DATA) render(DATA);
+  }
+  (function(){ const t = localStorage.getItem("sri_theme"); if (t) document.documentElement.setAttribute("data-theme", t); })();
+
+  function openSettings() {
+    const c = getCfg();
+    $("content").innerHTML = `
+      <div class="card setup">
+        <h2 style="margin:0 0 4px; font-size:16px;">Connect to your Supabase</h2>
+        <label>Insights function URL</label>
+        <input id="cfgUrl" placeholder="https://YOUR-REF.supabase.co/functions/v1/Insights" value="${c.url || ""}" />
+        <div class="hint">Copy the exact URL from your <b>Insights</b> function page in Supabase (mind the capital letter).</div>
+        <label>Supabase anon key</label>
+        <input id="cfgKey" type="password" placeholder="your project's anon / public key (eyJ...)" value="${c.key || ""}" />
+        <div class="hint">Supabase → Project Settings → API → anon/public key. Stored only in this browser.</div>
+        <button class="save" onclick="saveSettings()">Save &amp; load</button>
+      </div>`;
+    $("foot").textContent = "";
+  }
+  function saveSettings() {
+    setCfg({ url: $("cfgUrl").value.trim().replace(/\/+$/, ""), key: $("cfgKey").value.trim() });
+    load();
+  }
+
+  async function load() {
+    const c = getCfg();
+    if (!c.url) return openSettings();
+    $("content").innerHTML = '<div class="empty">Loading your data…</div>';
+    let data;
+    try {
+      const sep = c.url.includes("?") ? "&" : "?";
+      const res = await fetch(`${c.url}${sep}apikey=${encodeURIComponent(c.key || "")}`);
+      if (res.status === 401) return errBox("Unauthorized — check your anon key.");
+      data = await res.json();
+    } catch (e) { return errBox("Could not reach the insights function. Check the URL."); }
+    if (!data || !data.count) {
+      $("content").innerHTML = `<div class="card"><div class="empty">Connected — but no data yet. Trigger a Health Auto Export sync, then refresh.</div></div>`;
+      return;
+    }
+    DATA = data; render(data);
+  }
+  const errBox = (m) => { $("content").innerHTML =
+    `<div class="card"><div class="empty">${m}<br><br><button class="btn" onclick="openSettings()">Open settings</button></div></div>`; };
+
+  function trailingAvg(hist, field, endExcl, win=7) {
+    const v = [];
+    for (let i = Math.max(0, endExcl - win); i < endExcl; i++) { const x = hist[i]?.raw?.[field]; if (x != null) v.push(x); }
+    return avg(v);
+  }
+  function rollingAvg(series, win=7) {
+    return series.map((_, i) => { const s = []; for (let j = Math.max(0, i-win+1); j <= i; j++) if (series[j] != null) s.push(series[j]); return avg(s); });
+  }
+
+  const METRICS = [
+    { key:"hrv", label:"HRV", unit:" ms", good:"up" },
+    { key:"resting_hr", label:"Resting HR", unit:" bpm", good:"down" },
+    { key:"sleep_hours", label:"Sleep", unit:" h", good:"up" },
+    { key:"respiratory_rate", label:"Respiratory", unit:" br/min", good:"flat" },
+    { key:"wrist_temperature", label:"Wrist temp", unit:" °C", good:"flat" },
+    { key:"spo2", label:"Blood O₂", unit:" %", good:"up" },
+  ];
+  const STATUS = {
+    green:{ word:"High", color:"var(--good)", icon:"▲" },
+    yellow:{ word:"Moderate", color:"var(--warning)", icon:"■" },
+    red:{ word:"Low", color:"var(--critical)", icon:"▼" },
+    unknown:{ word:"—", color:"var(--muted)", icon:"·" },
+  };
+  const STRESS_STATUS = {
+    low:{ word:"Low", color:"var(--good)" }, moderate:{ word:"Moderate", color:"var(--warning)" },
+    high:{ word:"High", color:"var(--critical)" }, unknown:{ word:"—", color:"var(--muted)" },
+  };
+
+  function deltaInfo(cur, base, good) {
+    if (cur == null || base == null || base === 0) return { txt:"—", cls:"neutral" };
+    const pct = (cur - base) / Math.abs(base) * 100;
+    const arrow = pct > 0.5 ? "↑" : pct < -0.5 ? "↓" : "→";
+    let cls = "neutral";
+    if (good === "up") cls = pct > 0.5 ? "good" : pct < -0.5 ? "bad" : "neutral";
+    else if (good === "down") cls = pct < -0.5 ? "good" : pct > 0.5 ? "bad" : "neutral";
+    return { txt:`${arrow} ${Math.abs(pct).toFixed(0)}% vs 7-day`, cls };
+  }
+
+  // ---- Today's plan (daily review) ----
+  function makeReview(data) {
+    const L = data.latest, r = L.recovery, s = L.stress, hist = data.history;
+    if (r.state === "unknown")
+      return { tone:"", head:"Building your baseline", body:"Keep syncing daily — after about 5 days your recovery score and personalised plan kick in.", target:null, tips:[] };
+    const recentStrain = avg(hist.slice(-3).map(d => d.strain?.score).filter(v => v != null));
+    const lastSleep = L.raw.sleep_hours;
+    let head, body, target, tone;
+    if (r.state === "green") { head="Primed to perform"; target="14–18"; tone="good";
+      body="You're well recovered. A good day to push — intervals, a long effort, or a heavier session your body can absorb."; }
+    else if (r.state === "yellow") { head="Train with awareness"; target="10–14"; tone="warning";
+      body="You're partly loaded. Moderate training is fine — keep it controlled and skip maximal efforts today."; }
+    else { head="Prioritise recovery"; target="under 8"; tone="critical";
+      body="Recovery is low; your body is under strain. Favour rest or easy movement — a walk, mobility, or a light spin."; }
+    const tips = [];
+    if (lastSleep != null && lastSleep < 7) tips.push(`Sleep was short (${round(lastSleep)}h) — aim for 8h tonight.`);
+    if (recentStrain != null && recentStrain >= 14 && r.state !== "green") tips.push("You've carried high load for a few days — an easier day will pay off.");
+    if (s.level === "high") tips.push("Stress is elevated today — a few minutes of slow breathing can bring it down.");
+    if (r.state === "green" && (recentStrain == null || recentStrain < 8)) tips.push("You've been taking it easy — your body can handle more.");
+    return { tone, head, body, target, tips };
+  }
+
+  // ---- weekly summary ----
+  function weekly(hist) {
+    const last7 = hist.slice(-7);
+    const recs = last7.map(d => d.recovery.score).filter(v => v != null);
+    let best = null, worst = null;
+    last7.forEach(d => { if (d.recovery.score == null) return;
+      if (!best || d.recovery.score > best.recovery.score) best = d;
+      if (!worst || d.recovery.score < worst.recovery.score) worst = d; });
+    let streak = 0; for (let i = hist.length-1; i >= 0; i--) { if (hist[i].recovery.state === "green") streak++; else break; }
+    return {
+      avgRec: avg(recs), best, worst, streak,
+      avgSleep: avg(last7.map(d => d.raw.sleep_hours).filter(v => v != null)),
+      avgStrain: avg(last7.map(d => d.strain?.score).filter(v => v != null)),
+    };
+  }
+
+  // ---- gamification ----
+  function maxGreenStreak(hist) {
+    let best = 0, cur = 0;
+    for (const d of hist) { if (d.recovery.state === "green") { cur++; best = Math.max(best, cur); } else cur = 0; }
+    return best;
+  }
+  function weeklyGoals(hist) {
+    const last7 = hist.slice(-7);
+    const green = last7.filter(d => d.recovery.state === "green").length;
+    const sleptWell = last7.filter(d => d.raw.sleep_hours != null && d.raw.sleep_hours >= 7).length;
+    const recs = last7.map(d => d.recovery.score).filter(v => v != null);
+    const avgRec = avg(recs);
+    return [
+      { label:"Green recovery days", cur:green, goal:4, unit:"" },
+      { label:"Nights of 7h+ sleep", cur:sleptWell, goal:5, unit:"" },
+      { label:"Avg recovery ≥ 60%", cur:avgRec!=null?Math.round(avgRec):0, goal:60, unit:"%" },
+    ];
+  }
+  const ACHIEVEMENTS = [
+    { icon:"📲", name:"First Sync", desc:"Logged a day", test:h=>h.length>=1 },
+    { icon:"📅", name:"One Week", desc:"7 days tracked", test:h=>h.length>=7 },
+    { icon:"🗓️", name:"Consistent", desc:"30 days tracked", test:h=>h.length>=30 },
+    { icon:"😴", name:"Well Rested", desc:"An 8h+ night", test:h=>h.some(d=>d.raw.sleep_hours>=8) },
+    { icon:"💚", name:"Peak Recovery", desc:"Hit 85%+", test:h=>h.some(d=>d.recovery.score>=85) },
+    { icon:"🔥", name:"Green ×3", desc:"3 green in a row", test:h=>maxGreenStreak(h)>=3 },
+    { icon:"🌿", name:"Green ×7", desc:"7 green in a row", test:h=>maxGreenStreak(h)>=7 },
+    { icon:"⚡", name:"All Out", desc:"18+ strain day", test:h=>h.some(d=>d.strain?.score>=18) },
+    { icon:"🧘", name:"Smart Rest", desc:"Rested when low", test:h=>h.some(d=>d.recovery.state==="red"&&d.strain?.score!=null&&d.strain.score<8) },
+    { icon:"⚖️", name:"In Balance", desc:"Trained when fresh", test:h=>h.some(d=>d.recovery.state==="green"&&d.strain?.score>=12) },
+  ];
+  function records(hist) {
+    const max = (f) => { const v = hist.map(f).filter(x=>x!=null); return v.length?Math.max(...v):null; };
+    return [
+      { l:"Best recovery", v: max(d=>d.recovery.score), u:"%" },
+      { l:"Highest HRV", v: max(d=>d.raw.hrv), u:" ms" },
+      { l:"Longest sleep", v: max(d=>d.raw.sleep_hours), u:"h" },
+      { l:"Best green streak", v: maxGreenStreak(hist)||null, u:" days" },
+      { l:"Hardest day", v: max(d=>d.strain?.score), u:" strain" },
+    ];
+  }
+  const WK_ICON = (t) => { t=(t||"").toLowerCase();
+    if (/run/.test(t)) return "🏃"; if (/walk|hik/.test(t)) return "🚶"; if (/cycl|bike|spin/.test(t)) return "🚴";
+    if (/swim/.test(t)) return "🏊"; if (/strength|weight|lift|function/.test(t)) return "🏋️"; if (/yoga|pilates|flex/.test(t)) return "🧘";
+    if (/hiit|interval/.test(t)) return "🔥"; if (/row/.test(t)) return "🚣"; if (/danc/.test(t)) return "💃"; return "🏅"; };
+
+  function freshness(dateStr) {
+    const t = new Date();
+    const today = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
+    const days = Math.round((new Date(today+"T00:00:00") - new Date(dateStr+"T00:00:00")) / 86400000);
+    if (days <= 0) return { label:"Today", stale:false };
+    if (days === 1) return { label:"Yesterday", stale:false };
+    return { label:`${days} days ago`, stale:true, days };
+  }
+
+  function render(data) {
+    const hist = data.history, latest = data.latest;
+    const fresh = freshness(latest.date);
+    const rec = latest.recovery, stress = latest.stress, strain = latest.strain || {score:null,level:"unknown"};
+    const st = STATUS[rec.state] || STATUS.unknown;
+    const pct = rec.score != null ? rec.score : 0;
+    const R = 74, C = 2*Math.PI*R, off = C * (1 - pct/100);
+    const rev = makeReview(data), wk = weekly(hist);
+    const goals = weeklyGoals(hist), recList = records(hist), workouts = data.workouts || [];
+
+    const tiles = METRICS.map(m => {
+      const cur = latest.raw[m.key];
+      const d = deltaInfo(cur, trailingAvg(hist, m.key, hist.length-1, 7), m.good);
+      const spark = hist.slice(-14).map(h => h.raw[m.key]);
+      return `<div class="tile"><div class="t-label">${m.label}</div>
+        <div class="t-val">${fmt(cur)}<small>${cur!=null?m.unit:""}</small></div>
+        <div class="t-delta ${d.cls}">${d.txt}</div>
+        <div class="spark" data-spark='${JSON.stringify(spark)}'></div></div>`;
+    }).join("");
+
+    const ss = STRESS_STATUS[stress.level] || STRESS_STATUS.unknown;
+    const sPct = stress.score != null ? clamp(stress.score/3*100, 3, 100) : 0;
+    const strPct = strain.score != null ? clamp(strain.score/21*100, 3, 100) : 0;
+
+    $("content").innerHTML = `
+      <div class="card hero">
+        <div class="ring-wrap">
+          <svg width="168" height="168" viewBox="0 0 168 168" aria-hidden="true">
+            <circle cx="84" cy="84" r="${R}" fill="none" stroke="var(--hairline)" stroke-width="13"/>
+            <circle cx="84" cy="84" r="${R}" fill="none" stroke="${st.color}" stroke-width="13" stroke-linecap="round"
+              stroke-dasharray="${C}" stroke-dashoffset="${off}" transform="rotate(-90 84 84)"/>
+          </svg>
+          <div class="ring-center"><div class="ring-score">${rec.score ?? "—"}<small>${rec.score!=null?"%":""}</small></div><div class="ring-sub">Recovery</div></div>
+        </div>
+        <div class="hero-meta">
+          <h2>${fresh.label} · ${latest.date}</h2>
+          ${fresh.stale ? `<div style="font-size:12px;color:var(--warning);margin-bottom:8px;">⚠ Last sync was ${fresh.days} days ago — run your Health Auto Export automation to update.</div>` : ""}
+          <div class="status" style="background:color-mix(in srgb, ${st.color} 15%, transparent); color:${st.color};">
+            <span class="dot" style="background:${st.color}"></span>${st.icon} ${st.word} recovery</div>
+          <div class="insight">${makeInsightLine(latest)}</div>
+        </div>
+      </div>
+
+      <div class="card review ${rev.tone}">
+        <div class="r-top">
+          <h3>Today's plan · ${rev.head}</h3>
+          ${rev.target ? `<span class="target">Suggested strain <b>${rev.target}</b></span>` : ""}
+        </div>
+        <p class="r-body">${rev.body}</p>
+        ${rev.tips.length ? `<ul class="tips">${rev.tips.map(t=>`<li>${t}</li>`).join("")}</ul>` : ""}
+      </div>
+
+      <div class="tiles">
+        <div class="tile"><div class="t-label">Stress</div>
+          <div class="t-val">${stress.score ?? "—"}<small>${stress.score!=null?" / 3":""}</small></div>
+          <div class="t-delta neutral" style="color:${ss.color}; font-weight:600;">${ss.word}</div>
+          <div class="meter"><span style="width:${sPct}%; background:${ss.color};"></span></div></div>
+        <div class="tile"><div class="t-label">Strain</div>
+          <div class="t-val">${strain.score ?? "—"}<small>${strain.score!=null?" / 21":""}</small></div>
+          <div class="t-delta neutral" style="font-weight:600; text-transform:capitalize;">${strain.level!=="unknown"?strain.level:"—"}</div>
+          <div class="meter"><span style="width:${strPct}%; background:var(--series);"></span></div></div>
+        ${tiles}
+      </div>
+
+      <div class="card week">
+        <h3>This week</h3>
+        <div class="week-stats">
+          <div class="ws"><div class="ws-v" style="color:${st.color}">${wk.avgRec!=null?Math.round(wk.avgRec)+"%":"—"}</div><div class="ws-l">Avg recovery</div></div>
+          <div class="ws"><div class="ws-v">${wk.streak}${wk.streak?" 🔥":""}</div><div class="ws-l">Green-day streak</div></div>
+          <div class="ws"><div class="ws-v">${wk.avgSleep!=null?round(wk.avgSleep)+"h":"—"}</div><div class="ws-l">Avg sleep</div></div>
+          <div class="ws"><div class="ws-v">${wk.avgStrain!=null?round(wk.avgStrain):"—"}</div><div class="ws-l">Avg strain</div></div>
+          <div class="ws"><div class="ws-v" style="color:var(--good)">${wk.best?Math.round(wk.best.recovery.score)+"%":"—"}</div><div class="ws-l">Best · ${wk.best?wk.best.date.slice(5):"—"}</div></div>
+          <div class="ws"><div class="ws-v" style="color:var(--critical)">${wk.worst?Math.round(wk.worst.recovery.score)+"%":"—"}</div><div class="ws-l">Toughest · ${wk.worst?wk.worst.date.slice(5):"—"}</div></div>
+        </div>
+      </div>
+
+      <div class="card block">
+        <h3>Goals this week</h3>
+        <div class="goals">${goals.map(g => { const pct = clamp(g.cur/g.goal*100,0,100), done = g.cur>=g.goal;
+          return `<div class="goal"><div class="g-top"><span>${g.label}</span>
+            <span class="${done?'g-done':''}"><b>${g.cur}${g.unit}</b> / ${g.goal}${g.unit} ${done?'✓':''}</span></div>
+            <div class="meter"><span style="width:${pct}%; background:${done?'var(--good)':'var(--series)'};"></span></div></div>`; }).join("")}</div>
+      </div>
+
+      <div class="card block">
+        <h3>Achievements · ${ACHIEVEMENTS.filter(a=>a.test(hist)).length}/${ACHIEVEMENTS.length}</h3>
+        <div class="badges">${ACHIEVEMENTS.map(a => { const earned = a.test(hist);
+          return `<div class="badge ${earned?'':'locked'}"><div class="b-ico">${a.icon}</div><div class="b-name">${a.name}</div><div class="b-desc">${a.desc}</div></div>`; }).join("")}</div>
+        <div class="records">${recList.map(r => `<div><div class="rec-v">${r.v!=null?round(r.v)+r.u:"—"}</div><div class="rec-l">${r.l}</div></div>`).join("")}</div>
+      </div>
+
+      ${workouts.length ? `<div class="card block">
+        <h3>Recent workouts</h3>
+        ${workouts.slice(0,8).map(w => `<div class="wk-row">
+          <div class="wk-ico">${WK_ICON(w.type)}</div>
+          <div class="wk-main"><div class="wk-type">${w.type||"Workout"}</div><div class="wk-date">${w.date}${w.duration_min?` · ${Math.round(w.duration_min)} min`:""}</div></div>
+          <div class="wk-stats">${w.active_energy!=null?`<b>${Math.round(w.active_energy)}</b> kcal`:""}${w.avg_hr!=null?`<br>${Math.round(w.avg_hr)} bpm avg`:""}${w.distance!=null?`<br>${round(w.distance)} km`:""}</div>
+        </div>`).join("")}
+      </div>` : ""}
+
+      <div class="chips">
+        ${[7,30,90,9999].map(n => `<button class="chip" aria-pressed="${RANGE===n}" onclick="setRange(${n})">${n===9999?"All":n+"d"}</button>`).join("")}
+      </div>
+
+      ${chartCard("Recovery","recHost")}
+      ${chartCard("Stress (0–3)","strHost")}
+      ${chartCard("Strain (0–21)","strainHost")}
+      <div class="card chart-card"><div class="section-title">HRV &amp; Resting heart rate</div>
+        <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px;">
+          <div><div class="legend"><span><i style="border-color:var(--series)"></i>HRV (ms)</span></div><div class="chart-host" id="hrvHost"></div></div>
+          <div><div class="legend"><span><i style="border-color:var(--series)"></i>Resting HR (bpm)</span></div><div class="chart-host" id="rhrHost"></div></div>
+        </div></div>
+
+      <details class="card"><summary><span>Daily log</span><span>▾</span></summary>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Date</th><th>Rec</th><th>Stress</th><th>Strain</th><th>HRV</th><th>Rest HR</th><th>Sleep</th><th>Resp</th><th>Temp</th><th>O₂</th></tr></thead>
+          <tbody>${slice(hist).slice().reverse().map(d => `<tr>
+            <td>${d.date}</td><td>${fmt(d.recovery.score)}</td><td>${fmt(d.stress.score)}</td><td>${fmt(d.strain?.score)}</td>
+            <td>${fmt(d.raw.hrv)}</td><td>${fmt(d.raw.resting_hr)}</td><td>${fmt(d.raw.sleep_hours)}</td>
+            <td>${fmt(d.raw.respiratory_rate)}</td><td>${fmt(d.raw.wrist_temperature)}</td><td>${fmt(d.raw.spo2)}</td></tr>`).join("")}</tbody>
+        </table></div></details>`;
+
+    $("foot").innerHTML = data.count < 6
+      ? `Baseline still forming (${data.count} days). Scores sharpen after ~5 days of data.`
+      : `${data.count} days tracked · baseline window ${data.baseline_window_days} days`;
+
+    document.querySelectorAll(".spark").forEach(el => sparkline(el, JSON.parse(el.dataset.spark)));
+    drawCharts();
+  }
+
+  const chartCard = (title, id) => `<div class="card chart-card"><div class="section-title">${title}</div>
+    <div class="legend"><span><i style="border-color:var(--series)"></i>Daily</span><span><i class="dash" style="border-color:var(--muted)"></i>7-day average</span></div>
+    <div class="chart-host" id="${id}"></div></div>`;
+
+  function makeInsightLine(latest) {
+    const r = latest.recovery, c = r.contributions || {};
+    if (r.state === "unknown") return r.note || "";
+    if (r.state === "green") return `You're well recovered${c.hrv?` — HRV ${c.hrv.z>=0?"above":"around"} your baseline`:""}.`;
+    if (r.state === "yellow") return "Moderate recovery — a middle-ground day.";
+    const dr = []; if (c.hrv&&c.hrv.z<-.5) dr.push("HRV is down"); if (c.resting_hr&&c.resting_hr.z>.5) dr.push("resting HR is up");
+    return `Low recovery${dr.length?` — ${dr.join(", ")}`:""}.`;
+  }
+
+  function slice(hist) { return RANGE >= 9999 ? hist : hist.slice(-RANGE); }
+  function setRange(n) { RANGE = n; if (DATA) render(DATA); }
+
+  function drawCharts() {
+    const h = slice(DATA.history), labels = h.map(d => d.date.slice(5));
+    const rec = h.map(d => d.recovery.score), str = h.map(d => d.stress.score), stn = h.map(d => d.strain?.score ?? null);
+    lineChart($("recHost"), { labels, series:[{name:"Daily",data:rec,color:"var(--series)",fill:true},{name:"7-day",data:rollingAvg(rec),color:"var(--muted)",dash:true}], yMin:0, yMax:100, unit:"%" });
+    lineChart($("strHost"), { labels, series:[{name:"Daily",data:str,color:"var(--series)",fill:true},{name:"7-day",data:rollingAvg(str),color:"var(--muted)",dash:true}], yMin:0, yMax:3, unit:"" });
+    lineChart($("strainHost"), { labels, series:[{name:"Daily",data:stn,color:"var(--series)",fill:true},{name:"7-day",data:rollingAvg(stn),color:"var(--muted)",dash:true}], yMin:0, yMax:21, unit:"" });
+    lineChart($("hrvHost"), { labels, series:[{name:"HRV",data:h.map(d=>d.raw.hrv),color:"var(--series)",fill:true}], unit:" ms" });
+    lineChart($("rhrHost"), { labels, series:[{name:"Resting HR",data:h.map(d=>d.raw.resting_hr),color:"var(--series)",fill:true}], unit:" bpm" });
+  }
+
+  function sparkline(host, data) {
+    const W = host.clientWidth || 130, H = 34, pad = 3;
+    const vals = data.filter(v => v != null);
+    if (vals.length < 2) { host.innerHTML = `<svg width="${W}" height="${H}"></svg>`; return; }
+    const lo = Math.min(...vals), hi = Math.max(...vals), span = (hi-lo)||1, n = data.length;
+    const x = i => pad + (n<=1?0:(i/(n-1))*(W-2*pad)), y = v => pad + (1-(v-lo)/span)*(H-2*pad);
+    let d="", started=false, last=null;
+    data.forEach((v,i)=>{ if(v==null){started=false;return;} const px=x(i),py=y(v); d+=(started?"L":"M")+px.toFixed(1)+" "+py.toFixed(1)+" "; started=true; last=[px,py]; });
+    host.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><path d="${d}" fill="none" stroke="var(--series)" stroke-width="1.6" stroke-linejoin="round"/>${last?`<circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.4" fill="var(--series)"/>`:""}</svg>`;
+  }
+
+  function lineChart(host, opts) {
+    const W = host.clientWidth || 300, H = 210, pad = { l:32, r:12, t:12, b:22 };
+    const plotW = W-pad.l-pad.r, plotH = H-pad.t-pad.b;
+    const all = opts.series.flatMap(s => s.data).filter(v => v!=null);
+    let lo = opts.yMin!=null ? opts.yMin : Math.min(...all), hi = opts.yMax!=null ? opts.yMax : Math.max(...all);
+    if (opts.yMin==null) { const p=(hi-lo)*0.12||1; lo-=p; hi+=p; }
+    const n = opts.labels.length;
+    const X = i => pad.l + (n<=1?plotW/2:(i/(n-1))*plotW), Y = v => pad.t + (1-(v-lo)/((hi-lo)||1))*plotH;
+    let grid="", ylab="";
+    for (let g=0; g<=3; g++){ const yy=pad.t+(g/3)*plotH, val=hi-(g/3)*(hi-lo);
+      grid += `<line x1="${pad.l}" y1="${yy}" x2="${pad.l+plotW}" y2="${yy}" stroke="var(--hairline)" stroke-width="1"/>`;
+      ylab += `<text x="${pad.l-6}" y="${yy+3}" text-anchor="end" font-size="10" fill="var(--muted)">${round(val,0)}</text>`; }
+    let xlab=""; const step=Math.max(1,Math.ceil(n/6));
+    for (let i=0;i<n;i+=step) xlab += `<text x="${X(i)}" y="${H-6}" text-anchor="middle" font-size="10" fill="var(--muted)">${opts.labels[i]}</text>`;
+    let paths="";
+    opts.series.forEach(s => {
+      let d="", started=false, area="";
+      s.data.forEach((v,i)=>{ if(v==null){started=false;return;} const px=X(i),py=Y(v); d+=(started?"L":"M")+px.toFixed(1)+" "+py.toFixed(1)+" "; started=true; });
+      if (s.fill && d) { const pts = s.data.map((v,i)=>v==null?null:[X(i),Y(v)]).filter(Boolean);
+        if (pts.length) area = `<path d="M${pts[0][0]} ${pad.t+plotH} L`+pts.map(p=>p[0]+" "+p[1]).join(" L")+` L${pts[pts.length-1][0]} ${pad.t+plotH} Z" fill="var(--series-soft)"/>`; }
+      paths += area + `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" ${s.dash?'stroke-dasharray="4 4"':''}/>`;
+    });
+    host.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="touch-action:none;">${grid}${ylab}${xlab}${paths}
+      <line id="cross" x1="0" y1="${pad.t}" x2="0" y2="${pad.t+plotH}" stroke="var(--muted)" stroke-width="1" opacity="0"/>
+      <rect x="${pad.l}" y="${pad.t}" width="${plotW}" height="${plotH}" fill="transparent"/></svg><div class="tooltip"></div>`;
+    const svg = host.querySelector("svg"), cross = host.querySelector("#cross"), tip = host.querySelector(".tooltip");
+    function move(e){ const rect = svg.getBoundingClientRect();
+      const cx = (e.touches?e.touches[0].clientX:e.clientX) - rect.left;
+      const i = clamp(Math.round((cx-pad.l)/(plotW||1)*(n-1)), 0, n-1);
+      if (opts.labels[i]==null) return;
+      cross.setAttribute("x1", X(i)); cross.setAttribute("x2", X(i)); cross.setAttribute("opacity","1");
+      const rows = opts.series.map(s => s.data[i]==null?null:`${s.name}: <b>${round(s.data[i])}${opts.unit||""}</b>`).filter(Boolean).join("<br>");
+      tip.innerHTML = `<div style="color:var(--muted);margin-bottom:2px">${opts.labels[i]}</div>${rows}`;
+      tip.style.left = clamp(X(i),40,W-40)+"px"; tip.style.top = pad.t+8+"px"; tip.style.opacity = "1"; }
+    function leave(){ cross.setAttribute("opacity","0"); tip.style.opacity="0"; }
+    svg.addEventListener("pointermove", move); svg.addEventListener("pointerleave", leave); svg.addEventListener("touchmove", move, {passive:true});
+  }
+
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => DATA && render(DATA), 200); });
+  load();
+  </script>
+</body>
+</html>
